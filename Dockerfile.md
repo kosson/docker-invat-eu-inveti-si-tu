@@ -8,7 +8,7 @@ Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul list�
 docker build -t numeimaginenoua .
 ```
 
-Dacă nu-i dai nicio etichetă, motorul docker va da automat eticheta `latest`. Dacă este menționat punctul la finalul subcomenzii `build`, motorul Docker va căuta fișierul `Dockerfile` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
+Dacă nu-i dai nicio etichetă, motorul docker va da automat eticheta `latest`. Dacă este menționat punctul la finalul subcomenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
 
 ## Sintaxa instrucțiunilor
 
@@ -22,7 +22,7 @@ Dacă nu-i dai nicio etichetă, motorul docker va da automat eticheta `latest`. 
 
 ## Instrucțiunea FROM
 
-Este una dintre cele mai importante instrucțiuni și setează imaginea de bază de la care se va porni construcția. Dacă imaginea nu există deja pe computerul gazdă, aceasta va fi trasă de pe hub.
+Este una dintre cele mai importante instrucțiuni și setează imaginea de la care se va porni construcția imaginii personalizate. Dacă imaginea nu există deja pe computerul gazdă, aceasta va fi trasă de pe hub.
 
 Semnătura este `FROM <image>[:tag|@<digest>]`.
 
@@ -38,11 +38,11 @@ Această instrucțiune este una care aduce lămuriri în ceea ce privește fiși
 
 ```yaml
 MAINTAINER Bibi Sandu <bibi.sandu@gica.ro>
-``` 
+```
 
 ## Instrucțiunea COPY
 
-Această instrucțiune permite copierea de fișiere din sistemul de operare gazdă în sistemul de fițiere al noii imagini.
+Această instrucțiune permite copierea de fișiere din sistemul de operare gazdă în sistemul de fișiere al noii imagini.
 
 ```yaml
 COPY /calea/sursă ... /cale/destinație
@@ -96,9 +96,9 @@ USER 10
 USER gigel
 ```
 
-## Instrucțiunea WORKDIR
+## Instrucțiunea RUN
 
-Inițial, directorul de lucru al imaginii este rădăcina `/`. Folosind această instrucțiune, vei schimba directorul de lucru la cel specificat. Instrucțiunile care vor urma acesteia, vor folosi directorul de lucru nou (`RUN`, `CMD` și `ENTRYPOINT`).
+Permite rularea de comenzi la momentul constituirii noii imagini.
 
 ## Instrucțiunea VOLUME
 
@@ -114,6 +114,23 @@ Cea de-a doua sintaxă este cea asemănătoare shell-ului.
 
 ```yaml
 VOLUME calea/director01
+```
+
+## Instrucțiunea WORKDIR
+
+Inițial, directorul de lucru al imaginii este rădăcina `/`. Folosind această instrucțiune, vei schimba directorul de lucru la cel specificat de aplicația pe care dorești să o introduci ca nivel suplimentar într-o imagine personalizată. Instrucțiunile care vor urma acesteia, vor folosi directorul de lucru nou (`RUN`, `CMD` și `ENTRYPOINT`). Un exemplu ar fi constituirea unei imagini chiar din directorul în care se află aplicația dezvoltată.
+
+```yaml
+FROM    node:latest
+MAINTAINER Nico Dandana
+ENV     NODE_ENV=developement
+ENV     PORT=3000
+COPY    . /var/www
+WORKDIR /var/www
+VOLUME  ["/logs"]
+RUN     npm install
+EXPOSE  $PORT
+ENTRYPOINT ["npm","start"]
 ```
 
 ## Instrucțiunea EXPOSE
@@ -149,5 +166,11 @@ LABEL org.label-schema.schema-version="1.0"
       org.label-schema.description="Primul meu proiect Docker"
 ```
 
-## Instrucțiunea RUN
+## Instrucțiunea ENTRYPOINT
 
+Poți menționa care este punctul de intrare în aplicația pe care dorești să o impingi în imagine.
+Pentru o aplicație Node, punctul de intrare este `node nume_index.js`.
+
+```yaml
+ENTRYPOINT ["npm", "start"]
+```
