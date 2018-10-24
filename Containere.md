@@ -16,9 +16,11 @@ Imaginile Docker sunt template-uri read-only și nu au nicio stare asociată. Pu
 
 Containerele pot fi oprite, pornite și repornite cu `start`, `stop` și `restart`. La un stop ceea ce se întâmplă este trimiterea unui SIGTERM (-15) procesului intern principal al containerului. Motorul Docker așteaptă o închiderea a procesului intern după perioada de grație, iar dacă acest lucru nu se petrece, va fi emis un SIGKILL (-9), ceea ce va conduce la o încheiere abruptă a execuției procesului intern, dar fără o curățare corespunzătoare.
 
+Buna practică spune că un container ar trebui să ruleze doar un singur proces/aplicație/serviciu. Este vorba despre realizarea unei arhitecturi de microservicii - MSA (Microservices Architecture). Din aceste considerente, viața unui container este strâns legată de procesul/serviciul/aplicația care-l rulează. Atunci când procesul care rulează în container se oprește din diferite motive, containerul este oprit și el. 
+
 ## Numirea containerelor
 
-Putem numi noi containerele cum dorim. La momentul rulării unei imagini, dacă nu adaugi `--detach` sau mai simplu `-d`, terminalul sau consola vor fi blocate. Folosirea lui detach va debloca consola pentru a putea fi utilizată și pentru alte operațiuni.
+Putem numi noi containerele cum dorim. În momentul rulării subcomenzii `run`, containerul va fi pornit, dar i se va da un nume arbitrar. Folosirea opțiunii `--name nume_container` va denumi containerul care tocmai rulează.
 
 ```bash
 docker container run --publish 80:80 --detach --name kosson-starter-kick nginx
@@ -31,6 +33,8 @@ $ docker container ls
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                NAMES
 c6e614f7c8ad        nginx               "nginx -g 'daemon of…"   9 seconds ago       Up 8 seconds        0.0.0.0:80->80/tcp   kosson-starter-kick
 ```
+
+Numirea containerelor este foarte importantă pentru că are urmări în ceea ce privește stabilirea unei rețele între mai multe posibile containere.
 
 ## Rularea unui container
 
@@ -70,7 +74,7 @@ Va fi returnat un identificator unic pentru containerul care rulează nginx. De 
 
 ### Lansarea unui container ca daemon
 
-Pentru a rula un container ca un daemon, trebuie să-l detașăm de terminalul care l-a pornit. Pentru aceasta avem subcomanda `detach`, care poate fi pasat subcomenzii `run` drept opțiune.
+La momentul rulării unei imagini, dacă nu adaugi `--detach` sau mai simplu `-d`, terminalul sau consola vor fi blocate. Folosirea lui detach va debloca consola pentru a putea fi utilizată și pentru alte operațiuni. Pentru a rula un container ca un daemon, trebuie să-l detașăm de terminalul care l-a pornit. Pentru aceasta avem subcomanda `detach`, care poate fi pasat subcomenzii `run` drept opțiune.
 
 ```bash
 docker run -d busybox

@@ -1,6 +1,6 @@
 # Imagini Docker
 
-Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine docker este  un set de layere de fișiere, dar care sunt read-only. Singura modalitatea de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
+Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine docker este un set de layere de fișiere, dar care sunt read-only. Singura modalitatea de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
 
 Pentru că tot am menționat layerele, pentru oricare imagine există un nivel de bază pe care se adaugă celelalte layere pentru a modela un scenariu cerut. Imaginile docker sunt statice după momentul în care au fost constituite prin îmbogățirea uneia de bază.
 
@@ -52,21 +52,20 @@ Dacă nu menționezi versiunea imaginii, subcomanda `pull` va aduce imaginea cu 
 
 La imaginea de bază pe care o rulezi drept container, poți adăuga software suplimentar și apoi poți converti acel container într-o imagine pe care să o folosești mai departe.
 
-După ce ai modificat imaginea pentru a conserva aceste modificări într-o nouă versiune trebuie să faci un `docker commit`.  Modificările pot fi investigate cu un `docker diff identificatorcontainer`. Subcomanda `commit` se poate aplica pe un container care rulează sau pe unul oprit. Motorul Docker va opri containerul în momentul în care se face commit-ul pentru a nu corupe datele interne.
+După ce ai modificat imaginea pentru a conserva aceste modificări într-o nouă versiune, trebuie să faci un `docker commit`.  Modificările pot fi investigate cu un `docker diff identificatorcontainer`. Subcomanda `commit` se poate aplica pe un container care rulează sau pe unul oprit. Motorul Docker va opri containerul în momentul în care se face commit-ul pentru a nu corupe datele interne.
 
-Imediat după commit, imaginea va apărea printre cele deja existente și este gata să fie folosită. Acestă modalitate de a crea imagini nu este recomandată decât pentru a face câteva teste. Cea mai elegantă metodă este de a crea imagini folosid un fișier dedicat Dockerfile.
+Imediat după commit, imaginea va apărea printre cele deja existente și este gata să fie folosită. Acestă modalitate de a crea imagini nu este recomandată decât pentru a face câteva teste. Cea mai elegantă metodă este de a crea imagini folosind un fișier dedicat Dockerfile.
 
 ### Crearea imaginilor cu Dockerfile
 
 În acest sens, vei crea un fișier Docker care conține instrucțiuni care vor face toate operațiunile necesare operaționalizării. Comanda de lucru este `docker build`.
 
-#### Pasul 1 - scrierea lui dockerfile
+#### Pasul 1 - scrierea lui Dockerfile
 
 Acest fișier este responsabil de construcția imaginii. Fiecare linie dintr-un fișier dockerfile este constituit din instrucțiuni urmate de câte o declarație.
-
 Fiecare instrucțiune creează câte un nivel al imaginii atunci când este generată imaginea.
 
-Un exemplu fooarte simplu este:
+Un exemplu foarte simplu este:
 
 ```yaml
 FROM node
@@ -77,26 +76,19 @@ RUN touch index.js > "console.log('BAU, BAU!')"
 EXPOSE 3000
 ```
 
-##### Instrucțiunea FROM
+Instrucțiunea `FROM` îi comunică daemonului `docker` ce imagine de bază să folosească pentru construirea noii imagini. Instrucțiunea `MAINTAINER` indică utilizatorul care se ocupă de imagine. Instrucțiunea `RUN` comunică `docker builder`-ului ce aplicații trebuie instalate și ce scripturi trebuie rulate pentru a crea suportul de rulare al aplicației.
 
-Îi comunică daemonului `docker` ce imagine de bază să folosească pentru construirea noii imagini.
+Fiecare instrucțiune are drept efect contruirea unui nivel intermediar atunci când imaginea este constituită.
 
-##### Instrucțiunea MAINTAINER
-
-Indică utilizatorul care se ocupă de imagine.
-
-##### Instrucțiunea RUN
-
-Această instrucțiune comunică builder-ului ce aplicații trebuie instalate și ce scripturi trebuie rulate pentru a crea suportul de rulare al aplicației.
+O mențiune privind volumele. Dacă specifici în `Dockerfile` necesitarea ca viitorul container generat în baza imaginii să constituie un director în care să persiste datele pe mașina gazdă, dacă vei avea instrucțiuni care ar trebui să pună ceva în director, la momentul creării legăturilor cu directorul de pe mașina gazdă, se vor pierde toate fișierele generate prin execuția unui `RUN`. Ar fi de preferat, ca directoarele de persistență să fie declarate la rularea containerului cu `docker run`.
 
 #### Pasul 2 - construirea imaginii
 
 ```bash
-sudo docker build -t nicolaie/node_test:v1 .
+sudo docker build -f Dockerfile -t nicolaie/node_test:v1 .
 ```
 
-Opțiunea `-t` este utilizat pentru a identifica imaginea de care ține utilizatorul.
-
+Opțiunea `-t`, prescurtare de la `--tag`, este utilizată pentru a identifica imaginea printr-o etichetă. În cazul în care folosești un alt fișier de construcție, care nu este cel canonic (`Dockerfile`), numit altfel, poți specifica numele fișierului care trebuie folosit prin opțiunea `-f NumeFisier`.
 Opțiunea punct `.` comunică builder-ului că fișierul Docker este chiar în acest director de unde se face build-ul. Punctul are același rol ca în Bash - indică directorul curent. Dacă fișierul nu este în directorul curent, se poate menționa calea.
 
 ```bash
@@ -135,9 +127,9 @@ Successfully built bdfaec48fd25
 Successfully tagged nicolaie/node_test:v1
 ```
 
-Ceea ce se va putea observa este faptul că docker va construi un context în care să construiască imaginea. Astfel, va proceda la aducerea imaginii necesare din hub și apoi va parcurge toate etapele menționate prin instrucțiunile `RUN`. La fiecare pas care a reușit se constituie un nou container intermediar identificat prin hash distinct. La final s-a creat imaginea cu id-ul `bdfaec48fd25`.
+Ceea ce se va putea observa este faptul că `docker` va construi un context în care să construiască imaginea. Astfel, va proceda la aducerea imaginii necesare din hub și apoi va parcurge toate etapele menționate prin instrucțiunile `RUN`. La fiecare pas care a reușit se constituie un nou container intermediar identificat prin hash distinct. La final s-a creat imaginea cu id-ul `bdfaec48fd25`.
 
-Dacă ai să arunci o privire pe lista imaginilor, o vei vedea pe cea nou constituită
+Dacă ai să arunci o privire pe lista imaginilor, o vei vedea pe cea nou constituită.
 
 ```bash
 docker image ls

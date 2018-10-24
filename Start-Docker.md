@@ -28,8 +28,6 @@ lsb_release -cs
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 ```
 
-În acest moment, final de mai 2017 docker nu are candidat stabil pentru Ubuntu.
-
 ```bash
 curl -sSL https://get.docker.com | CHANNEL=stable bash
 ```
@@ -38,7 +36,7 @@ curl -sSL https://get.docker.com | CHANNEL=stable bash
 
 Pentru că nu poate fi instalată versiunea stable, am ales versiunea de test, care se instalează: 18-05-0-ce. Soluție prezentată pe [docker-ce package is missing for Ubuntu "Bionic" 18.04 LTS x86_64 \#290 ](https://github.com/docker/for-linux/issues/290).
 
-După instalare, dacă este o mașină de lucru, nu una de producție, cel mai bine ar fi să adaugi utilizatorul sub care operezi la grupul docker.
+După instalare, dacă este o mașină de lucru, nu una de producție, cel mai bine ar fi să adaugi utilizatorul sub care operezi la grupul `docker`.
 
 ```bash
 sudo usermod -aG docker your-user

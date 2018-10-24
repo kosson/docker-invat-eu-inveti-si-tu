@@ -8,7 +8,7 @@ Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul list�
 docker build -t numeimaginenoua .
 ```
 
-Dacă nu-i dai nicio etichetă, motorul docker va da automat eticheta `latest`. Dacă este menționat punctul la finalul subcomenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
+Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`. Dacă este menționat punctul la finalul subcomenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
 
 ## Sintaxa instrucțiunilor
 
@@ -98,7 +98,62 @@ USER gigel
 
 ## Instrucțiunea RUN
 
-Permite rularea de comenzi la momentul constituirii noii imagini.
+Permite rularea de comenzi la momentul constituirii de noi imagini. Poți folosi o singură instrucțiune `RUN` pentru a reduce numărul de layere care se vor constitui.
+
+```yaml
+FROM python:3.5
+RUN apt-get update -y && apt-get upgrade -y
+```
+
+sau
+
+```yaml
+RUN apt-get update && \
+    apt-get install -y apache && \
+    apt-get clean
+```
+
+Ține minte faptul că pentru fiecare instrucțiune RUN, se va constitui un nou layer. De regulă, comenzile de shell vor fi executate prin invocarea `.bin/sh -c`.
+
+## Instrucțiunea CMD
+
+Această instrucțiune poate iniția execuția oricărei comenzi, dar spre deosebire de `RUN`, rularea comezii se va face la momentul inițierii containerului, nu la momentul constituirii imaginii. Aceste execuții pot fi suprascrise dacă se folosesc argumente ale subcomenzii `run` (`docker run`).
+
+```yaml
+CMD ["npm", "start"]
+```
+
+## Instrucțiunea ENTRYPOINT
+
+Această instrucțiune este folosită atunci când dorești să folosești un container ca mediu pentru a executa o singură instrucțiune. Este ca și cum au transforma întreg containerul într-un executabil. Spre deosebire de cazul instrucțiunii `CMD`, această instruțiune nu poate fi suprascrisă prin folosirea unui `docker run`. Trebuie să ai o singură instrucțiune `ENTRYPOINT` pentru un singur container.
+
+```yaml
+ENTRYPOINT ["echo","Ceva interesant și ies!"]
+```
+
+Construiești imaginea și o rulezi.
+
+```bash
+$ sudo docker build -t ceva-demo .
+$ sudo docker run ceva-demo
+```
+
+În cazul în care ai nevoie de interacțiune cu mediul intern al imaginii, poți rula oricând în terminal.
+
+```bash
+sudo docker run -it --entrypoint="/bin/sh" ceva-demo
+```
+
+## Instrucțiunea HEALTHCHECK
+
+În cazul în care o aplicație dintr-un container funcționează prost, este nevoie ca starea să fie comunicată în extern. În acest sens poate fi emisă o comandă la un anumit interval de timp care va returna 0, dacă procesul este în bună stare sau 1 în caz contrar.
+
+```yaml
+HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
+```
+
+O singură instrucțiune `HEALTHCHECK` este luată în considerare, ultima.
+
 
 ## Instrucțiunea VOLUME
 
@@ -173,4 +228,30 @@ Pentru o aplicație Node, punctul de intrare este `node nume_index.js`.
 
 ```yaml
 ENTRYPOINT ["npm", "start"]
+```
+
+## Instrucțiunea ONBUILD
+
+Aceasta intruduce în imagine o instrucțiune care va fi declanșată la momentul când este construită altă imagine având-o pe aceasta ca bază. Aceste instrucțiuni vor fi declanșate imediat după `FROM`.
+
+Poți să te gândești că acestă instrucțiune introduce un declanșator la momentul când o altă imagine este construită. Instrucțiunea care va fi declanșată este tot una `Dockerfile`.
+
+```yaml
+ONBUILD ADD configurare /var/www/app
+```
+
+## Instrucțiunea STOPSIGNAL
+
+Poți folosi această instrucțiune pentru a seta un mesaj la ieșirea din execuție a containerului.
+
+```yaml
+STOPSIGNAL SIGKILL
+```
+
+## Instrucțiunea SHELL
+
+Această instrucțiune permite folosirea unui alt shell pentru executarea comenzilor în container. În cazul Linux-ului, se folosește `sh`, iar pentru Windows, bine-cunoscutul `cmd`.
+
+```yaml
+SHELL ["bash","argumentDeShel1"]
 ```
