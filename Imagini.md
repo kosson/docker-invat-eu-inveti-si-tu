@@ -1,10 +1,13 @@
 # Imagini Docker
 
-Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine docker este un set de layere de fișiere, dar care sunt read-only. Singura modalitatea de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
+Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine `docker` este un set de layere de fișiere, dar care sunt read-only. Singura modalitate de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
 
-Pentru că tot am menționat layerele, pentru oricare imagine există un nivel de bază pe care se adaugă celelalte layere pentru a modela un scenariu cerut. Imaginile docker sunt statice după momentul în care au fost constituite prin îmbogățirea uneia de bază.
+Toate imaginile care au fost create local stau într-un registru local din care pot fi accesate.
 
-Poți să-ți creezi propriile imagini sau să le folosești pe cele create de ceilalți aflate într-un registru online. Ai posibilitatea să creezi propriile imagini prin crearea unui `Dockerfile`. Folosirea unui Dockerfile permite modificarea unei imagini și rularea acesteia. Fiecare instrucțiune din Dockerfile creează un nou layer al imaginii. Atunci când ai nevoie de o mică modificare, o aduci fișierului Dockerfile și reconstruiești imaginea. În momentul în care rulezi o instanță a imaginii, spui că ai constituit un container. Acel container poate fi creat, șters, mutat sau distrus.
+Pentru că tot am menționat layerele, pentru oricare imagine există un nivel de bază pe care se adaugă celelalte layere pentru a modela un scenariu cerut. Imaginile docker sunt statice după momentul în care au fost constituite prin îmbogățirea uneia de bază. Asta înseamnă că de vei dori modificarea imaginii pentru a oferi servicii suplimentare sau pentru a reconfigura anumite servicii, va trebui să reconstruiești imaginea sau imaginile. Spun acest lucru pentru că în anumite cazuri o imagine se construiește pe baza altor imagini. Spunem despre imaginea originală că este o imagine părinte, iar despre cea care a fost generată că este una copil.
+
+Poți să-ți creezi propriile imagini sau să le folosești pe cele create de ceilalți aflate într-un registru online. Pentru a *trage* o imagine de la Docker Hub, un depozit de imagini, vei folosi comanda `docker pull nume_imagini` și pentru a construi propria stivă, care servește unei anumite aplicații. Poți folosi `docker commit` pentru a actualiza imaginea online cu cele mai noi modificări, dar de cele mai multe ori vei folosi `docker build` în tandem cu directivele dintr-un `Dockerfile`. Folosirea unui `Dockerfile` permite modificarea unei imagini și rularea acesteia. Fiecare instrucțiune din `Dockerfile` creează un nou layer al imaginii. Atunci când ai nevoie de o mică modificare, o aduci fișierului `Dockerfile` și reconstruiești imaginea. În momentul în care rulezi o instanță a imaginii, spui că ai constituit un container. Acel container poate fi creat, șters, mutat sau distrus.
+Pentru a investiga modificările aduse unei imagini, vei folosi `docker history`.
 
 ## Manipularea imaginilor existente
 
@@ -54,15 +57,15 @@ La imaginea de bază pe care o rulezi drept container, poți adăuga software su
 
 După ce ai modificat imaginea pentru a conserva aceste modificări într-o nouă versiune, trebuie să faci un `docker commit`.  Modificările pot fi investigate cu un `docker diff identificatorcontainer`. Subcomanda `commit` se poate aplica pe un container care rulează sau pe unul oprit. Motorul Docker va opri containerul în momentul în care se face commit-ul pentru a nu corupe datele interne.
 
-Imediat după commit, imaginea va apărea printre cele deja existente și este gata să fie folosită. Acestă modalitate de a crea imagini nu este recomandată decât pentru a face câteva teste. Cea mai elegantă metodă este de a crea imagini folosind un fișier dedicat Dockerfile.
+Imediat după commit, imaginea va apărea printre cele deja existente și este gata să fie folosită. Acestă modalitate de a crea imagini nu este recomandată decât pentru a face câteva teste. Cea mai elegantă metodă este de a crea imagini folosind un fișier dedicat `Dockerfile`.
 
 ### Crearea imaginilor cu Dockerfile
 
-În acest sens, vei crea un fișier Docker care conține instrucțiuni care vor face toate operațiunile necesare operaționalizării. Comanda de lucru este `docker build`.
+În acest sens, vei crea un fișier `Dockerfile` care conține instrucțiuni care vor face toate operațiunile necesare operaționalizării. Comanda de lucru este `docker build`.
 
 #### Pasul 1 - scrierea lui Dockerfile
 
-Acest fișier este responsabil de construcția imaginii. Fiecare linie dintr-un fișier dockerfile este constituit din instrucțiuni urmate de câte o declarație.
+Acest fișier este responsabil de construcția imaginii. Fiecare linie dintr-un fișier `Dockerfile` este constituit din instrucțiuni urmate de câte o declarație.
 Fiecare instrucțiune creează câte un nivel al imaginii atunci când este generată imaginea.
 
 Un exemplu foarte simplu este:
@@ -78,17 +81,20 @@ EXPOSE 3000
 
 Instrucțiunea `FROM` îi comunică daemonului `docker` ce imagine de bază să folosească pentru construirea noii imagini. Instrucțiunea `MAINTAINER` indică utilizatorul care se ocupă de imagine. Instrucțiunea `RUN` comunică `docker builder`-ului ce aplicații trebuie instalate și ce scripturi trebuie rulate pentru a crea suportul de rulare al aplicației.
 
-Fiecare instrucțiune are drept efect contruirea unui nivel intermediar atunci când imaginea este constituită.
+Fiecare instrucțiune are drept efect construirea unui nivel intermediar atunci când imaginea este constituită.
 
 O mențiune privind volumele. Dacă specifici în `Dockerfile` necesitarea ca viitorul container generat în baza imaginii să constituie un director în care să persiste datele pe mașina gazdă, dacă vei avea instrucțiuni care ar trebui să pună ceva în director, la momentul creării legăturilor cu directorul de pe mașina gazdă, se vor pierde toate fișierele generate prin execuția unui `RUN`. Ar fi de preferat, ca directoarele de persistență să fie declarate la rularea containerului cu `docker run`.
 
 #### Pasul 2 - construirea imaginii
 
+După ce ai elaborat fișierul pe baza căruia se va construi imaginea, vei apela sub-comanda `build` pentru a genera noua imagine. Dacă fișierul `Dockerfile` se află în același director în care te afli deja, nu mai este necesară specificarea lui folosind opțiunea `--file` (pe scurt `-f`). Se înțelege că există deja acolo.
+
+
 ```bash
 sudo docker build -f Dockerfile -t nicolaie/node_test:v1 .
 ```
 
-Opțiunea `-t`, prescurtare de la `--tag`, este utilizată pentru a identifica imaginea printr-o etichetă. În cazul în care folosești un alt fișier de construcție, care nu este cel canonic (`Dockerfile`), numit altfel, poți specifica numele fișierului care trebuie folosit prin opțiunea `-f NumeFisier`.
+Opțiunea `-t`, prescurtare de la `--tag`, este utilizată pentru a identifica imaginea printr-o etichetă. În cazul în care folosești un alt fișier de construcție, care nu este cel canonic (`Dockerfile`), numit altfel, poți specifica numele fișierului care trebuie folosit prin opțiunea `-f cale/NumeFisier`.
 Opțiunea punct `.` comunică builder-ului că fișierul Docker este chiar în acest director de unde se face build-ul. Punctul are același rol ca în Bash - indică directorul curent. Dacă fișierul nu este în directorul curent, se poate menționa calea.
 
 ```bash

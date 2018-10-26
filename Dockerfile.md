@@ -2,17 +2,17 @@
 
 Este un fișier text pe baza căruia se va genera imaginea.
 
-Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul listării imaginilor. Dacă ai uitat, poți folosi subcomanda `tag` pentru a da un nume imaginii. Numele se dă la momentul construcției imaginii adăugând opțiunea `-t numeimaginenoua`.
+Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul listării imaginilor. Dacă ai uitat, poți folosi sub-comanda `tag` pentru a da un nume imaginii. Numele se dă la momentul construcției imaginii adăugând opțiunea `-t numeimaginenoua`.
 
 ```bash
 docker build -t numeimaginenoua .
 ```
 
-Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`. Dacă este menționat punctul la finalul subcomenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
+Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`. Dacă este menționat punctul la finalul sub-comenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
 
 ## Sintaxa instrucțiunilor
 
-În cazul fișierului `Dockerfile`, este foate important de unde începe instrucțiunea pe o linie pentru că spațiile au importanță. Urmează instrucțiune care prin convenție este redactată cu majuscule pentru a diferenția instrucțiunile de argumente. Apoi urmează toate argumentele. Liniile de comentariu sunt declarate folosind un diez (`#`).
+În cazul fișierului `Dockerfile`, este foarte important de unde începe instrucțiunea pe o linie pentru că spațiile au importanță. Urmează instrucțiune care prin convenție este redactată cu majuscule pentru a diferenția instrucțiunile de argumente. Apoi urmează toate argumentele. Liniile de comentariu sunt declarate folosind un diez (`#`).
 
 În deschiderea fișierului poți menționa directive pentru parser-ul fișierului. Cel mai adesea vei vedea directiva ca menționează ce caracter trebuie să fie considerat a fi cel de escape.
 
@@ -64,6 +64,10 @@ Această instrucțiune prezintă similarități cu cea de copiere, dar ceea ce o
 
 Această instrucțiune este perfectă pentru a face un adevărat deployment al unor resurse care trebuie să ajungă fiecare pe anumite căi.
 
+```yaml
+ADD http://www.myremotesource.com/files/html.tar.gz /usr/share/nginx/
+```
+
 ## Instrucțiunea ENV
 
 Folosește această instrucțiune pentru a seta o variabilă de mediu în noua imagine. Această variabilă de mediu va putea fi accesată de toate scripturile și aplicațiile.
@@ -71,6 +75,23 @@ Folosește această instrucțiune pentru a seta o variabilă de mediu în noua i
 ```yaml
 ENV O_CHEIE o/valoare/cale_de_ex
 ```
+
+Această instrucțiune se dovedește a fi foarte utilă atunci când aplicația noastră rulează într-un mediu care accesează rețelele exterioare printr-un server proxy.
+
+```yaml
+ENV http_proxy host:port
+ENV https_proxy host:port
+```
+
+În cazul în care folosești `ENV cheie valoare`, poți preciza o singură pereche pe linie. Dacă folosești `ENV cheie01=val01 cheie02=val02`, poți preciza mai multe valori pe o singură linie.
+
+În `ENV` poți preciza și un anumit utilizator.
+
+```yaml
+ENV username=kosson
+```
+
+Poți vedea care sunt variabilele de mediu folosind `docker image inspect id_img`.
 
 ## Instrucțiunea ARG
 
@@ -88,13 +109,15 @@ docker build --build-arg home=nico .
 
 ## Instrucțiunea USER
 
-Folosește această instrucțiune atunci când dorești să setezi utilizatorul noii imagini. Containerele vin din start cu utilizatorul root, dar dacă folosești USER, contul de root va fi numele specificat de `USER`. Poți seta dacă dorești și identificatorul numeric.
+Folosește această instrucțiune atunci când dorești să setezi utilizatorul pentru comenzile specificate cu `CMD`, `RUN` și `ENTRYPOINT`. Containerele vin din start cu utilizatorul `root`, dar dacă folosești `USER`, contul de `root` va fi numele specificat de `USER`. Poți seta dacă dorești și identificatorul numeric.
 
 ```yaml
 USER 10
 # sau
 USER gigel
 ```
+
+Ține minte că utilizatorul menționat trebuie să existe neapărat. Cu ajutorul acestei instrucțiuni poți menționa și permisiunile.
 
 ## Instrucțiunea RUN
 
@@ -113,14 +136,22 @@ RUN apt-get update && \
     apt-get clean
 ```
 
-Ține minte faptul că pentru fiecare instrucțiune RUN, se va constitui un nou layer. De regulă, comenzile de shell vor fi executate prin invocarea `.bin/sh -c`.
+Ține minte faptul că pentru fiecare instrucțiune `RUN`, se va constitui un nou layer. De regulă, comenzile de shell vor fi executate prin invocarea `.bin/sh -c`.
+
+Un alt exemplu este instalarea dependințelor pentru o aplicație Python.
+
+```yaml
+# instalează pachetele necesare specificate în requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+```
 
 ## Instrucțiunea CMD
 
-Această instrucțiune poate iniția execuția oricărei comenzi, dar spre deosebire de `RUN`, rularea comezii se va face la momentul inițierii containerului, nu la momentul constituirii imaginii. Aceste execuții pot fi suprascrise dacă se folosesc argumente ale subcomenzii `run` (`docker run`).
+Această instrucțiune poate iniția execuția oricărei comenzi, dar spre deosebire de `RUN`, rularea comenzii se va face la momentul inițierii containerului, nu la momentul constituirii imaginii. Aceste execuții pot fi suprascrise dacă se folosesc argumente ale sub-comenzii `run` (`docker run`).
 
 ```yaml
 CMD ["npm", "start"]
+CMD ["python", "app.py"]
 ```
 
 ## Instrucțiunea ENTRYPOINT
@@ -194,6 +225,7 @@ Această instrucțiune va fi utilizată atunci când trebuie deschisă comunicar
 
 ```yaml
 EXPOSE numarPort/numeProtocol altPortDacaENevoie
+EXPOSE 80/tcp
 ```
 
 Dacă ai nevoie poți menționa mai multe porturi deodată.
@@ -223,7 +255,15 @@ LABEL org.label-schema.schema-version="1.0"
 
 ## Instrucțiunea ENTRYPOINT
 
-Poți menționa care este punctul de intrare în aplicația pe care dorești să o impingi în imagine.
+Poți menționa care este punctul de intrare, adică rularea procesului care inițiază aplicația. `ENTRYPOINT` poate lucra în tandem cu `CMD`.
+
+```yaml
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;"]
+```
+
+Acest exemplu este perfect identic cu apelul din linia de comandă `nginx -g daemon off`.
+
 Pentru o aplicație Node, punctul de intrare este `node nume_index.js`.
 
 ```yaml
