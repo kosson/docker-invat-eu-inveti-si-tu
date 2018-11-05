@@ -218,3 +218,17 @@ docker network connect
 ```bash
 docker network disconnect
 ```
+
+### Eliminarea driverului
+
+```bash
+docker network prune
+```
+
+## Ping la un container
+
+Uneori este foarte rapid să vezi care este IP-ul unui container prin executarea unui ping pe container.
+
+```bash
+docker container exec ceva.sh ping -c 3 node_server
+```

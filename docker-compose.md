@@ -1,8 +1,10 @@
 # Docker compose
 
-Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Petru a reuși acest lucru este folosit un fișier YAML în care sunt precizate toate serviciile și modul cum se configurează.
+Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Pentru a reuși acest lucru este folosit un fișier YAML în care sunt precizate toate serviciile și modul cum se configurează.
 
 ## docker-compose.yml
+
+Fișierele `docker-compose` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul YAML Ain't Markup Language, fiind o structură de codare a informațiilor (serializare a datelor) bazată pe spațiere și pe linii, care țintește ușoara înțelegere de către oameni, dar și mașini. Mai multe detalii privind acest tip de fișiere la yaml.org.
 
 Acest fișier este folosit pentru configurarea serviciilor. Acest fișier este prelucrat printr-un proces de `build`, din care va rezulta o imagine.
 
@@ -27,7 +29,7 @@ services:
   node:
     build:
       context: .
-      dockerfile: dockerfilenode
+      dockerfile: numele_Dokerfileului
     ports:
       - "3000:3000"
     networks:
@@ -50,7 +52,54 @@ networks:
 În cazul serviciului `mongo`, nu vom crea o imagine care să fie particularizată, așa că vom folosi imaginea pusă la dispoziție de hub-ul Docker.
 Când ai terminat de adăugat toate componentele, se va folosi comanda `docker-compose build` pentru a construi toate imaginile și pentru a parametriza rețeaua de comunicare. După această etapă, se poate folosi comanda `docker-compose up` pentru a genera containerele.
 
-În cazul serviciului de baze de date Postgres, ceea ce este vizibil în plus este secțiunea dedicată variabilelor de mediu pentru imaginea repectivă. Setarea de parolă este necesară accesului din celelalte containere.
+În cazul serviciului de baze de date Postgres, ceea ce este vizibil în plus este secțiunea dedicată variabilelor de mediu pentru imaginea respectivă. Setarea de parolă este necesară accesului din celelalte containere.
+
+### Gestionarea volumelor
+
+În cazul în care dorești ca un volum să fie cunoscut după un nume date de tine, dar să fie legat de un director din imagine, acest lucru trebuie menționat în fișierul `docker-compose.yml` în mod explicit.
+
+Acest lucru este echivalentul creării unui volum mai întâi rulând `docker volume create volume nume_dorit_al_volumului`, urmat de atașarea volumului la container.
+
+```bash
+docker container run -d --name redis -v nume_dorit:/data --network reteaua_containerelor redis:alpine
+```
+
+Acest lucru se realizează mai simplu prin introducerea directă în `docker-compose.yml`.
+
+```yaml
+version "3"
+services:
+  redis:
+    image: alpine:redis
+    volumes:
+      - date_redis:/data
+    restart: always
+volumes:
+  date_redis:
+```
+
+### Lansarea de comenzi
+
+Uneori ai nevoie să lansezi aplicațiile la momentul constituirii containerului prin rularea lui `docker compose run`.
+
+```yaml
+version "3"
+services:
+  app:
+    build: ./app
+    command: python3 app.py
+    volumes:
+      - ./app:/app
+    ports:
+      - "5000:80"
+    networks:
+      - front-end
+      - back-end
+```
+
+Aceste instrucțiuni îi spun lui `docker-compose` să caute fișierul `Dockerfile` în directorul `app`. Apoi se va monta directorul mașinii gazdă `app` în container într-un director `app`.
+
+La rețele, au fost menționate două. Cea de `front-end`, care va expune porturile către mașina gazdă și `back-end`, care va rula izolat fără a expune nimic.
 
 ## docker-compose build
 
@@ -65,7 +114,7 @@ Este comanda care pornește containerele. Util ar fi să rulezi comanda `detache
 docker-compose up --no-deps node
 ```
 
-Pentru această comandă, nu este nevoie să modifici celelate componente ale mediului. Pentru a specifica acest lucru, se introduce opțiunea `--no-deps`. Acest lucru va conduce la oprirea și reconfigurarea doar a imaginii de nod cu repornirea acestuia fără a afecta celelalte componente.
+Pentru această comandă, nu este nevoie să modifici celelalte componente ale mediului. Pentru a specifica acest lucru, se introduce opțiunea `--no-deps`. Acest lucru va conduce la oprirea și reconfigurarea doar a imaginii de nod cu repornirea acestuia fără a afecta celelalte componente.
 
 ## docker-compose down
 

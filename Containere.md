@@ -16,7 +16,7 @@ Imaginile Docker sunt template-uri read-only și nu au nicio stare asociată. Pu
 
 Containerele pot fi oprite, pornite și repornite cu `start`, `stop` și `restart`. La un stop ceea ce se întâmplă este trimiterea unui SIGTERM (-15) procesului intern principal al containerului. Motorul Docker așteaptă o închiderea a procesului intern după perioada de grație, iar dacă acest lucru nu se petrece, va fi emis un SIGKILL (-9), ceea ce va conduce la o încheiere abruptă a execuției procesului intern, dar fără o curățare corespunzătoare.
 
-Buna practică spune că un container ar trebui să ruleze doar un singur proces/aplicație/serviciu. Este vorba despre realizarea unei arhitecturi de microservicii - MSA (Microservices Architecture). Din aceste considerente, viața unui container este strâns legată de procesul/serviciul/aplicația care-l rulează. Atunci când procesul care rulează în container se oprește din diferite motive, containerul este oprit și el. 
+Buna practică spune că un container ar trebui să ruleze doar un singur proces/aplicație/serviciu. Este vorba despre realizarea unei arhitecturi de microservicii - MSA (Microservices Architecture). Din aceste considerente, viața unui container este strâns legată de procesul/serviciul/aplicația care-l rulează. Atunci când procesul care rulează în container se oprește din diferite motive, containerul este oprit și el.
 
 ## Numirea containerelor
 
@@ -82,7 +82,7 @@ docker run -d busybox
 
 ### Rularea în mod interactiv
 
-Ceea ce se întâmplă atunci cănd rulezi un container este că o imagine este luată drept input și este lansată ca un container. Un container poate rula în modul interactiv dacă comenzii `run` îi sunt adăugate fanioanele `-t` și `-i`. Fanionul `-i` este cel care face rularea containerului în mod interactiv. Ceea ce se petrece în spate este o capturare a input-ului standard al acelui container (STDIN-ul). Fanionul `-t` alocă un pseudo-terminal (TTY) pe care îl atribuie containerului tocmai pornit.
+Ceea ce se întâmplă atunci când rulezi un container este că o imagine este luată drept input și este lansată ca un container. Un container poate rula în modul interactiv dacă comenzii `run` îi sunt adăugate fanioanele `-t` și `-i`. Fanionul `-i` este cel care face rularea containerului în mod interactiv. Ceea ce se petrece în spate este o capturare a input-ului standard al acelui container (STDIN-ul). Fanionul `-t` alocă un pseudo-terminal (TTY) pe care îl atribuie containerului tocmai pornit.
 
 ```bash
 $ sudo docker run -i -t ubuntu:18.04 /bin/bash
@@ -114,7 +114,7 @@ $ sudo docker attach peaceful_goldwasser
 docker container run -it
 ```
 
-Opțiunea `-t` îți oferă un pseudo TTY. Opțiunea `-i` permite menținerea deschisă a unei sesiuni.
+Opțiunea `-t` îți oferă un pseudo-TTY. Opțiunea `-i` permite menținerea deschisă a unei sesiuni.
 
 ```bash
 docker container run -it --name webserv nginx bash
@@ -122,7 +122,9 @@ docker container run -it --name webserv nginx bash
 
 Vei obține un acces root în container. Pentru a ieși din shell, dai `exit`. Fii foarte atent că rularea containerului este legată de rularea comenzii. Dacă ai ieșit din shell, de exemplu, și containerul se va opri din rulare. Pentru a reporni un container în care ai făcut deja modificări folosind shell-ul, vei apela la comanda `docker container start -ai nume_container`.
 
-### Obținerea unui shell într-un container care rulează deja
+### Container exec
+
+Folosind această comandă, obții un shell într-un container care rulează deja
 
 ```bash
 docker container exec -it mysql bash
@@ -131,7 +133,7 @@ docker container exec -it vigorous_poitras sh
 # CTRL+P plus CTRL+Q ca sa detașezi terminalul
 ```
 
-Același lucru poate fi obținut folosind subcomanda `attach`.
+Este asemănătoare sub-comenzii `attach`.
 
 ## Obținerea de informații despre containere
 
@@ -150,7 +152,7 @@ Rularea aceleiași comenzi încheiată cu parametrul `-a` va indica un istoric a
 ### Afișarea detaliilor unui container
 
 Se face rulând `docker container inspect nume_container`. Va fi returnat un obiect JSON cu toate caracteristicile imaginii rulate.
-Pentru o comadă mai scurtă poți folosi direct:
+Pentru o comandă mai scurtă poți folosi direct:
 
 ```bash
 docker inspect nume_container_sau_id
@@ -167,7 +169,7 @@ root     11653 11635  0   16:44   ?  00:00:00 nginx: master process nginx -g dae
 systemd+ 11713 11653  0   16:44   ?  00:00:00 nginx: worker process
 ```
 
-Poți afla în oricare moment care sunt procesele care rulează într-un container folosind și subcomanda `ps`.
+Poți afla în oricare moment care sunt procesele care rulează într-un container folosind și sub-comanda `ps`.
 
 ```bash
 docker container ps
@@ -175,7 +177,7 @@ docker container ps
 
 ### Verificarea logurilor generate
 
-Putem verifica și logurile care se generează rulând comanda `docker container logs nume_dat_sau_aflat`.
+Putem verifica și logurile care se generează rulând sub-comanda `logs` precum în `docker container logs nume_dat_sau_aflat`.
 
 ```bash
 $ docker container logs kosson-starter-kick
@@ -183,23 +185,49 @@ $ docker container logs kosson-starter-kick
 172.17.0.1 - - [28/May/2018:13:46:30 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0" "-"
 ```
 
-În cazul în care nu ai dat o denumire containerului, pentru a-l afla, vei rula comanda `docker container ls -a`.
+Sub-comanda `logs` permite interacțiunea cu streamul `stdout` al containerelor și este permisă combinarea și cu opțiunea `--tails numar_linii` pentru a avea o cantitate mai mare de informație specificată prin numărul de linii cât se dorește a fi afișat.
+
+#### Afișarea în real-time
+
+Pentru a realiza o afișare real-time, se va folosi sub-comanda `logs` cu opțiunea `-f` pentru un anumit container. Opțiunea `-f` este prescurtarea de la `--follow`.
+
+```bash
+docker container logs -f nginx
+```
+
+Cu ajutorul opțiunii `--since` poți afișa informații începând cu o anumită dată specificată.
+
+```bash
+docker container logs --since 2018-08-10T23:53 nginx
+```
 
 ### Afișarea statisticilor
 
+#### stats
+
+Când ai nevoie de afișarea detaliilor de funcționare al unui container cum ar fi CPU, memorie, etc, vei folosi această sub-comandă.
+
 ```bash
-docker container stats
+docker container stats nume_container_sau_id
 ```
 
 Această comandă va permite vizualizarea live a containerelor.
 
+#### top
+
+Dacă dorești să vezi care sunt procesele cele rulează într-un container, vei folosi sub-comanda `top`.
+
+```bash
+docker container top nume_container_sau_id
+```
+
 ## Pauze în rularea containerelor
 
-Containerele pot fi înghețate în execuția lor folosindu-se comanda `pause`. Pentru a relua execuția de unde a fost lăsată se va folosi subcomanda `unpause`.
+Containerele pot fi înghețate în execuția lor folosindu-se comanda `pause`. Pentru a relua execuția de unde a fost lăsată se va folosi sub-comanda `unpause`.
 
 ## Oprirea rulării unui container
 
-Pentru a opri rularea containerelor, se va folosi subcomanda `stop` după care se vor introduce primele caractere din identificatorul unic returnat la momentul pornirii.
+Pentru a opri rularea containerelor, se va folosi sub-comanda `stop` după care se vor introduce primele caractere din identificatorul unic returnat la momentul pornirii.
 
 ```bash
 docker container stop ec44e
@@ -211,9 +239,13 @@ Dacă nu știi cum ai numit containerele, introduci `docker container stop ` urm
 
 Oprirea unui container nu se va solda și cu ștergerea acestuia. Atunci când nu se intenționează modificarea containerelor create, cel mai bine este să le ștergem pentru a evita ocuparea inutilă a spațiului pe disc.
 
+## Repornirea containerelor
+
+Dacă ai nevoie să repornești un container, poți folosi `docker container restart nume_container`.
+
 ## Ștergerea containerelor
 
-După ce am folosit containerele, docker oferă posibilitatea de a șterge din ele. Poți să le ștergi pe toate sau doar cele dorite la un moment dat menționând după subcomanda `rm` mai multe id-uri aparținând containerelor care trebuie eliminate. Mai întâi vizualizează containerele existente.
+După ce am folosit containerele, docker oferă posibilitatea de a șterge din ele. Poți să le ștergi pe toate sau doar cele dorite la un moment dat menționând după sub-comanda `rm` mai multe id-uri aparținând containerelor care trebuie eliminate. Mai întâi vizualizează containerele existente.
 
 ```bash
 docker container ls -a
@@ -231,7 +263,7 @@ Acum vom proceda la ștergerea unora. Pentru acest lucru vei menționa fragmente
 docker container rm c6e ec4 ee5 8b2
 ```
 
-În cazul în care un container este în execuție, dacă dorești să-l elimini se va solda cu o eroare de următoarea formă: `Error response from daemon: You cannot remove a running container c6e614f7c8adb25631a5dc1cbe3d3201f1e1257516f2a314b2b7d681543e8d10. Stop the container before attempting removal or force remove`. Dar vor fi șterse cele inactive dintre id-urile pe care le-ai introdus ca opțiune în subcomanda `rm`. Poți forța ștergerea unui container în execuție prin menționarea opțiunii `-f` în comandă înaintea identificatorilor: `docker container rm -f c6e`.
+În cazul în care un container este în execuție, dacă dorești să-l elimini se va solda cu o eroare de următoarea formă: `Error response from daemon: You cannot remove a running container c6e614f7c8adb25631a5dc1cbe3d3201f1e1257516f2a314b2b7d681543e8d10. Stop the container before attempting removal or force remove`. Dar vor fi șterse cele inactive dintre id-urile pe care le-ai introdus ca opțiune în sub-comanda `rm`. Poți forța ștergerea unui container în execuție prin menționarea opțiunii `-f` în comandă înaintea identificatorilor: `docker container rm -f c6e`.
 
 Mai este posibilă instruirea motorului Docker ca atunci când un container a fost oprit, acesta să fie șters. Pentru acest lucru, chiar de la momentul inițierii comenzii de rulare, se va atașa fanionul `--rm`.
 
@@ -239,19 +271,19 @@ Mai este posibilă instruirea motorului Docker ca atunci când un container a fo
 docker run -it --rm busybox
 ```
 
-Poți combina subcomenzile `rm` și `ps` pentru a șterge toate containerele care nu rulează.
+Poți combina sub-comenzile `rm` și `ps` pentru a șterge toate containerele care nu rulează.
 
 ```bash
 docker rm $(docker ps -aq)
 ```
 
- Pentru containerele care rulează va fi generată o eroare. Pentru a evita aparția erorii se poate filtra.
+ Pentru containerele care rulează va fi generată o eroare. Pentru a evita apariția erorii se poate filtra.
 
 ```bash
 docker rm $(docker ps -aq -f state=exited)
 ```
 
-Dar pentru a evita toate aceastea există o comandă concisă:
+Dar pentru a evita toate acestea există o comandă concisă:
 
 ```bash
 docker container prune
@@ -259,45 +291,34 @@ docker container prune
 
 ## Modificări interne aduse containerului
 
-Atunci când aduci orice modificare, oricât de mică unui container, acestea pot fi aduse la lumină pentru o examinare folosind subcomanda `diff` a lui `docker`.
+Atunci când aduci orice modificare, oricât de mică unui container, acestea pot fi aduse la lumină pentru o examinare folosind sub-comanda `diff` a lui `docker`.
 
 ```bash
 sudo docker diff hashcontainer
 ```
 
-## Volume
+## Limitarea resurselor
 
-Este un director asociat unui container în care se pot introduce date. Toate containerele pot folosi același volum. Volumele sunt păstrate chiar și în cazul în care containerul este șters.
+Folosirea sub-comenzii `stats` indică câte resurse consumă un container din cele oferite de mașina gazdă. Un container va folosi toate resursele oferite, dacă nu sunt impuse limite la rulare.
 
-Volumele, indiferent unde le specifici în container, de fapt vor fi montate în `/mnt`-ul gazdei. De exemplu, pentru a avea un director în care să dezvolți o aplicație pentru Node, va trebui să folosești un director în care codul tău să persiste. Pentru a porni un server de Node care să aibă un volum, poți să-l specifici în linia de comandă care pornește containerul.
+La momentul în care pornim un container folosind sub-comanda `run`, putem să limităm consumul resurselor.
+
+Un exemplu prin care înjumătățim prioritatea către CPU și limităm accesul la memorie.
 
 ```bash
-docker run -p 8080:3000 -v /var/www node
+docker container run -d --name server_node --cpu-shares 512 --memory 128M -p 80:3000 node
 ```
 
-Docker va crea volumul menționat de opțiunea `-v` prin alias-ul `/var/www`.
+Dacă setezi la rulare memoria de o anumită dimensiune, memoria swap va fi dublă ca dimensiune automat. La investigarea cu `docker container stats nume_container`, va fi afișată limitarea în dreptul `MEM USAGE / LIMIT`.
 
-### Configurarea volumelor
-
-Să presupunem că tot o aplicație web folosind Node dorim să dezvoltăm. Asta, de regulă necesită un director `/var/www` în care pui sursele.
+Dacă avem deja un container care rulează deja, se poate face limitarea la resurse prin folosirea sub-comenzii `update`.
 
 ```bash
-docker run -p 8080:3000 -v $(pwd):/var/www node
+docker container update --cpu-shares 512 --memory 128M server_node
 ```
 
-Unde `-v` specifică necesitarea configurării unui volum, `$(pwd):` specifică folosirea directorului de lucru în care se află consola în care va sta codul sursă și închei specificând volumul așa cum are nevoie containerului pentru a lucra cu sursele.
-
-![Mounts](/images/2018/10/MountsVolume.png)
-
-Fii foarte atent la faptul că este de o importanță crucială unde te afli în structura directoarelor mașinii gazdă la momentul în care scrii comanda.
-Un alt lucru pe care trebuie să-l ții în minte este acela că poți șterge volumele folosite. Acest pas îl faci înainte de a șterge containerul.
+Dacă este returnată o eroare privind memoria swap, se va investiga cu `docker container inspect server_node | grep -i memory` care sunt setările privind memoria. Dacă întâlnim numai valori 0, asta marchează faptul că utilizarea resurselor gazdei este nelimitată. Pentru că în cazul setării memoriei, va trebui setată și memoria swap, comanda de limitare a resurselor, va trebui să o ia în calcul și pe aceasta.
 
 ```bash
-docker rm -v nume_container_sau_id
-```
-
-În cazul folosirii node, ai nevoie să execuți comenzile de pornire a serverului. Pentru a seta contextul de execuție, vei folosi opțiunea `-w "/var/www"`, care este urmată de directorul din container.
-
-```bash
-docker run -p 8080:3000 -v $(pwd):/var/wwww -w "/var/www" node npm start
+docker container update --cpu-shares 512 --memory 128M --memory-swap 256M server_node
 ```
