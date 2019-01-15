@@ -4,9 +4,13 @@ Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un 
 
 Lucrul care individualizează Docker de restul tehnologiilor de virtualizare este că poți constitui containere care se comportă identic și în momentul în care le introduci în producție.
 
-Docker ia o aplicație pe care o ambalează într-un sistem de fișiere. Acesta conține tot ce este necesar rulării aplicației. Containerele oferă și posibilitatea de a izola aplicațiile între ele oferindu-le și un nivel de protecție. Aceste aspecte oferă aspectul de container. Un container este o instanță a unei imagini care rulează. Un container poate fi conectat la una sau mai multe rețele, i se poate atașa un mediu de stocare sau se poate crea o nouă imagine pe baza stării sale curente. Funcționarea containerelor se leagă de tehnologia prin care se realizează `namespaces`. Acestea oferă spațiile de lucru protejate care sunt, de fapt folosite la rularea containerelor. Fiecare container creează un set de `namespaces`. Aceste namespaces oferă niveluri de izolare pentru diferitele componente care rulează în container. Docker engine combină namespace-urile, control group-urile și UnionFS într-o unitate numită *format de container*.
+Docker ia o aplicație pe care o ambalează într-un sistem de fișiere. Acesta conține tot ce este necesar rulării aplicației. Containerele oferă și posibilitatea de a izola aplicațiile între ele oferindu-le și un nivel de protecție. Aceste aspecte oferă aspectul de container. Un container este o instanță a unei imagini. Imaginile sunt construite (`docker build`) folosind fișiere `Dockerfile`, care configurează și parametrizează mediul de rulare și codul scris de tine.
 
-Tehnologia containerelor din Docker izolează un proces căruia îi oferă din resursele mașinii gazdă. Docker folosește pentru a realiza această izolare un sistem de fișiere numit *Another Unionfs* (AUFS) care poate distribui resursele mașinii gazdă între diferitele containere.
+Un container poate fi conectat la una sau mai multe rețele. I se poate atașa un mediu de stocare sau se poate crea o nouă imagine pe baza stării sale curente. Funcționarea containerelor se leagă de tehnologia prin care se realizează `namespaces`. Acestea oferă spațiile de lucru protejate care sunt, de fapt folosite la rularea containerelor. Fiecare container creează un set de `namespaces`. Aceste namespaces oferă niveluri de izolare pentru diferitele componente care rulează în container. Docker engine combină namespace-urile, control group-urile și UnionFS într-o unitate numită *format de container*.
+
+## Detalii tehnice
+
+Tehnologia containerelor din Docker izolează un proces căruia îi oferă din resursele mașinii gazdă. Docker folosește pentru a realiza această izolare un sistem de fișiere numit OverlayFS care poate distribui resursele mașinii gazdă între diferitele containere.
 
 Mai întâi de orice, cel mai bine este să te asiguri că poți vorbi cu serviciul `docker` interogând consola cu `docker version`. Dacă totul este în regulă și nu ai erori, poți afla mai multe despre instalarea docker: `docker info`.
 
@@ -71,6 +75,29 @@ docker container run --publish 80:80 --detach nginx
 ```
 
 Va fi returnat un identificator unic pentru containerul care rulează nginx. De fiecare dată când vei rula câte un container, va fi returnat un id unic pentru acel container.
+
+### Dockerfile
+
+Chiar dacă poți rula un container separat, ceea ce face din Docker o tehnologie cu adevărat demnă de atenție este faptul că poți parametriza funcționarea containerului printr-un fișier dedicat numit `Dockerfile`. Acest lucru presupune că vei folosi o imagine deja existentă, nu una pe care să o construiești de la 0. Un exemplu de rulare a unei aplicații de Python pe care-l oferă documentația.
+
+```yml
+# Folosești un runtime oficial drept punct de construcție a noii imagini
+FROM python:2.7-slim
+# Setezi directorul în care vei pune resursele aplicației la /app
+WORKDIR /app
+# Copiezi conținutul directorului curent al aplicației în /app
+COPY . /app
+# Instalezi pachetele și dependințele specificate în  requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+# MExpui portul 80 al containerului către exterior
+EXPOSE 80
+# Definești variabile de mediu
+ENV NAME World
+# Rulezi fișierul app.py atunci când containerul va porni
+CMD ["python", "app.py"]
+```
+
+Fișierul `Dockerfile.yml` trebuie să fie chiar unde sunt cele două resurse `app.py` și `resources.txt` pentru a se face copierea.
 
 ### Lansarea unui container ca daemon
 
@@ -322,3 +349,7 @@ Dacă este returnată o eroare privind memoria swap, se va investiga cu `docker 
 ```bash
 docker container update --cpu-shares 512 --memory 128M --memory-swap 256M server_node
 ```
+
+## Resurse
+
+- [Containers](https://docs.docker.com/get-started/part2/)

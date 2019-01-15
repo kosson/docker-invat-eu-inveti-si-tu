@@ -12,7 +12,7 @@ Docker va crea volumul menționat de opțiunea `-v` prin alias-ul `/var/www`.
 
 ## Creare volume particularizate
 
-uneori este nevoie să creezi un volum pe care să-l atașezi unui container. Pentru crearea volumelor vei folosi sub-comanda `volume create`.
+Uneori este nevoie să creezi un volum pe care să-l atașezi unui container. Pentru crearea volumelor vei folosi sub-comanda `volume create`.
 
 ```bash
 docker volume create redis_date

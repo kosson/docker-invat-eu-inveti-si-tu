@@ -1,6 +1,6 @@
 # Dockerfile
 
-Este un fișier text pe baza căruia se va genera imaginea.
+Este un fișier text pe baza căruia se va genera o imagine.
 
 Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul listării imaginilor. Dacă ai uitat, poți folosi sub-comanda `tag` pentru a da un nume imaginii. Numele se dă la momentul construcției imaginii adăugând opțiunea `-t numeimaginenoua`.
 
@@ -16,7 +16,7 @@ Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`
 
 În deschiderea fișierului poți menționa directive pentru parser-ul fișierului. Cel mai adesea vei vedea directiva ca menționează ce caracter trebuie să fie considerat a fi cel de escape.
 
-```yaml
+```yml
 # escape=`
 ```
 
@@ -28,7 +28,7 @@ Semnătura este `FROM <image>[:tag|@<digest>]`.
 
 La `<image>` va fi precizat numele imaginii care va fi utilizată ca cea de bază. Atributele `tag` și `digest` sunt opționale. Cu ajutorul acestora poți descărca o anumită imagine. Dacă nu precizezi atributul, motorul Docker va aducea cea mai recentă imagine asumând că tag-ul este `latest`. Ceva mai complex este cazul în care dorești să folosești alfanumericul `digest`.
 
-```yaml
+```yml
 FROM jessie:sha256:0b0043fe043....
 ```
 
@@ -36,7 +36,7 @@ FROM jessie:sha256:0b0043fe043....
 
 Această instrucțiune este una care aduce lămuriri în ceea ce privește fișierul `Dockerfile` și implicit despre imagine. Buna practică spune ca această instrucțiune să fie plasată după `FROM`.
 
-```yaml
+```yml
 MAINTAINER Bibi Sandu <bibi.sandu@gica.ro>
 ```
 
@@ -44,7 +44,7 @@ MAINTAINER Bibi Sandu <bibi.sandu@gica.ro>
 
 Această instrucțiune permite copierea de fișiere din sistemul de operare gazdă în sistemul de fișiere al noii imagini.
 
-```yaml
+```yml
 COPY /calea/sursă ... /cale/destinație
 ```
 
@@ -52,7 +52,7 @@ Calea sursă specifică de unde vor fi copiate resursele sau poate fi chiar dire
 
 La nevoie această instrucțiune va putea crea directoare sau va putea suprascrie resursele deja existente ale unei imagini. Să presupunem că ne aflăm într-un directer de unde emitem comanda de `build`. Copierea se va face pornind cu resursele specificate din acel director țintind calea din imagine.
 
-```yaml
+```yml
 COPY app HELP.md /home/gigi
 ```
 
@@ -64,7 +64,7 @@ Această instrucțiune prezintă similarități cu cea de copiere, dar ceea ce o
 
 Această instrucțiune este perfectă pentru a face un adevărat deployment al unor resurse care trebuie să ajungă fiecare pe anumite căi.
 
-```yaml
+```yml
 ADD http://www.myremotesource.com/files/html.tar.gz /usr/share/nginx/
 ```
 
@@ -72,13 +72,13 @@ ADD http://www.myremotesource.com/files/html.tar.gz /usr/share/nginx/
 
 Folosește această instrucțiune pentru a seta o variabilă de mediu în noua imagine. Această variabilă de mediu va putea fi accesată de toate scripturile și aplicațiile.
 
-```yaml
+```yml
 ENV O_CHEIE o/valoare/cale_de_ex
 ```
 
 Această instrucțiune se dovedește a fi foarte utilă atunci când aplicația noastră rulează într-un mediu care accesează rețelele exterioare printr-un server proxy.
 
-```yaml
+```yml
 ENV http_proxy host:port
 ENV https_proxy host:port
 ```
@@ -87,7 +87,7 @@ ENV https_proxy host:port
 
 În `ENV` poți preciza și un anumit utilizator.
 
-```yaml
+```yml
 ENV username=kosson
 ```
 
@@ -97,7 +97,7 @@ Poți vedea care sunt variabilele de mediu folosind `docker image inspect id_img
 
 Folosind `ARG`, la momentul constituirii imaginii, vei putea pasa argumente. Dar nu uita că și subcomanda `--build-arg` permite pasarea unei valori variabilelor definite cu această instrucțiune. Fii foarte atent că imaginea nu va putea fi creată dacă argumentele necesare nu vor fi specificate în `Dockerfile`. Deci, tot ce pasezi cu `--build-arg` trebuie să aibă un receptor cu `ARG` în `Dockerfile`.
 
-```yaml
+```yml
 ARG home
 ```
 
@@ -111,7 +111,7 @@ docker build --build-arg home=nico .
 
 Folosește această instrucțiune atunci când dorești să setezi utilizatorul pentru comenzile specificate cu `CMD`, `RUN` și `ENTRYPOINT`. Containerele vin din start cu utilizatorul `root`, dar dacă folosești `USER`, contul de `root` va fi numele specificat de `USER`. Poți seta dacă dorești și identificatorul numeric.
 
-```yaml
+```yml
 USER 10
 # sau
 USER gigel
@@ -123,14 +123,15 @@ USER gigel
 
 Permite rularea de comenzi la momentul constituirii de noi imagini. Poți folosi o singură instrucțiune `RUN` pentru a reduce numărul de layere care se vor constitui.
 
-```yaml
-FROM python:3.5
-RUN apt-get update -y && apt-get upgrade -y
+```yml
+version: "3"
+    FROM python:3.5
+    RUN apt-get update -y && apt-get upgrade -y
 ```
 
 sau
 
-```yaml
+```yml
 RUN apt-get update && \
     apt-get install -y apache && \
     apt-get clean
@@ -140,7 +141,7 @@ RUN apt-get update && \
 
 Un alt exemplu este instalarea dependințelor pentru o aplicație Python.
 
-```yaml
+```yml
 # instalează pachetele necesare specificate în requirements.txt
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
 ```
@@ -149,7 +150,7 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 Această instrucțiune poate iniția execuția oricărei comenzi, dar spre deosebire de `RUN`, rularea comenzii se va face la momentul inițierii containerului, nu la momentul constituirii imaginii. Aceste execuții pot fi suprascrise dacă se folosesc argumente ale sub-comenzii `run` (`docker run`).
 
-```yaml
+```yml
 CMD ["npm", "start"]
 CMD ["python", "app.py"]
 ```
@@ -158,7 +159,7 @@ CMD ["python", "app.py"]
 
 Această instrucțiune este folosită atunci când dorești să folosești un container ca mediu pentru a executa o singură instrucțiune. Este ca și cum au transforma întreg containerul într-un executabil. Spre deosebire de cazul instrucțiunii `CMD`, această instruțiune nu poate fi suprascrisă prin folosirea unui `docker run`. Trebuie să ai o singură instrucțiune `ENTRYPOINT` pentru un singur container.
 
-```yaml
+```yml
 ENTRYPOINT ["echo","Ceva interesant și ies!"]
 ```
 
@@ -179,12 +180,11 @@ sudo docker run -it --entrypoint="/bin/sh" ceva-demo
 
 În cazul în care o aplicație dintr-un container funcționează prost, este nevoie ca starea să fie comunicată în extern. În acest sens poate fi emisă o comandă la un anumit interval de timp care va returna 0, dacă procesul este în bună stare sau 1 în caz contrar.
 
-```yaml
+```yml
 HEALTHCHECK --interval=5m --timeout=3s CMD curl -f http://localhost/ || exit 1
 ```
 
 O singură instrucțiune `HEALTHCHECK` este luată în considerare, ultima.
-
 
 ## Instrucțiunea VOLUME
 
@@ -192,13 +192,13 @@ Această instrucțiune creează un director în sistemul de fișiere al imaginii
 
 Existâ două posibile sintaxe ale instrucțiunilor. Prima este un array JSON în care toate valorile sunt menționate între ghilimele duble.
 
-```yaml
+```yml
 VOLUME ["director01"]
 ```
 
 Cea de-a doua sintaxă este cea asemănătoare shell-ului.
 
-```yaml
+```yml
 VOLUME calea/director01
 ```
 
@@ -206,24 +206,25 @@ VOLUME calea/director01
 
 Inițial, directorul de lucru al imaginii este rădăcina `/`. Folosind această instrucțiune, vei schimba directorul de lucru la cel specificat de aplicația pe care dorești să o introduci ca nivel suplimentar într-o imagine personalizată. Instrucțiunile care vor urma acesteia, vor folosi directorul de lucru nou (`RUN`, `CMD` și `ENTRYPOINT`). Un exemplu ar fi constituirea unei imagini chiar din directorul în care se află aplicația dezvoltată.
 
-```yaml
-FROM    node:latest
-MAINTAINER Nico Dandana
-ENV     NODE_ENV=developement
-ENV     PORT=3000
-COPY    . /var/www
-WORKDIR /var/www
-VOLUME  ["/logs"]
-RUN     npm install
-EXPOSE  $PORT
-ENTRYPOINT ["npm","start"]
+```yml
+version: "3"
+    FROM    node:latest
+    MAINTAINER Nico Dandana
+    ENV     NODE_ENV=developement
+    ENV     PORT=3000
+    COPY    . /var/www
+    WORKDIR /var/www
+    VOLUME  ["/logs"]
+    RUN     npm install
+    EXPOSE  $PORT
+    ENTRYPOINT ["npm","start"]
 ```
 
 ## Instrucțiunea EXPOSE
 
 Această instrucțiune va fi utilizată atunci când trebuie deschisă comunicarea containerului pe rețea.
 
-```yaml
+```yml
 EXPOSE numarPort/numeProtocol altPortDacaENevoie
 EXPOSE 80/tcp
 ```
@@ -234,20 +235,20 @@ Dacă ai nevoie poți menționa mai multe porturi deodată.
 
 Această instrucțiune permite menționarea de `chei=valori` cu rol de metadate ale imaginii Docker.
 
-```yaml
+```yml
 LABEL cheie01=valoare01 cheie02=valoare02
 ```
 
 Perechile `cheie=valoare` pot fi câte sunt nevoie pentru o descriere detaliată.
 
-```yaml
+```yml
 LABEL autor="Nicolae Olaru"
       versiune="1.1"
 ```
 
 Dacă descrierile sunt simple, pot intra în conflict cu altele. Din acest motiv a apărut o formalizare pentru aceste etichete numită `Label Schema`.
 
-```yaml
+```yml
 LABEL org.label-schema.schema-version="1.0"
       org.label-schema.version="1.1"
       org.label-schema.description="Primul meu proiect Docker"
@@ -257,7 +258,7 @@ LABEL org.label-schema.schema-version="1.0"
 
 Poți menționa care este punctul de intrare, adică rularea procesului care inițiază aplicația. `ENTRYPOINT` poate lucra în tandem cu `CMD`.
 
-```yaml
+```yml
 ENTRYPOINT ["nginx"]
 CMD ["-g", "daemon off;"]
 ```
@@ -266,7 +267,7 @@ Acest exemplu este perfect identic cu apelul din linia de comandă `nginx -g dae
 
 Pentru o aplicație Node, punctul de intrare este `node nume_index.js`.
 
-```yaml
+```yml
 ENTRYPOINT ["npm", "start"]
 ```
 
@@ -276,7 +277,7 @@ Aceasta intruduce în imagine o instrucțiune care va fi declanșată la momentu
 
 Poți să te gândești că acestă instrucțiune introduce un declanșator la momentul când o altă imagine este construită. Instrucțiunea care va fi declanșată este tot una `Dockerfile`.
 
-```yaml
+```yml
 ONBUILD ADD configurare /var/www/app
 ```
 
@@ -284,7 +285,7 @@ ONBUILD ADD configurare /var/www/app
 
 Poți folosi această instrucțiune pentru a seta un mesaj la ieșirea din execuție a containerului.
 
-```yaml
+```yml
 STOPSIGNAL SIGKILL
 ```
 
@@ -292,6 +293,6 @@ STOPSIGNAL SIGKILL
 
 Această instrucțiune permite folosirea unui alt shell pentru executarea comenzilor în container. În cazul Linux-ului, se folosește `sh`, iar pentru Windows, bine-cunoscutul `cmd`.
 
-```yaml
+```yml
 SHELL ["bash","argumentDeShel1"]
 ```
