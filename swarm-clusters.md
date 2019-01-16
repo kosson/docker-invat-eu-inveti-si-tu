@@ -118,7 +118,7 @@ Pentru a vedea ce am realizat, va trebui să facem o interogare pe SSH primei ma
 docker-machine ssh virtuala1 "docker node ls"
 ```
 
-Răspunsul va fi un set de informații privind amble mașini și rolul lor.
+Răspunsul va fi un set de informații privind ambele mașini și rolul lor.
 
 ```text
 ID                            HOSTNAME            STATUS              AVAILABILITY        MANAGER STATUS      ENGINE VERSION
@@ -126,9 +126,104 @@ khobcw34hyvt5i6jdz2m0rruz *   virtuala1           Ready               Active    
 ojtfxmkklegyc0f254d5f6a5a     virtuala2           Ready               Active                                  18.09.1
 ```
 
-Pentru a părăsi swarm-ul va trebui rulată următoarea comandă pe SSH în fiecare mașină: `docker swarm leave`.
+Pentru a părăsi swarm-ul va trebui rulată următoarea comandă pe SSH în fiecare mașină: `docker swarm leave`. Reține faptul că doar mașina care are rolul de manager poate executa comenzi. Restul mașinilor sunt doar pentru a crește capacitatea.
 
-Reține faptul că doar mașina care are rolul de manager poate executa comenzi. Restul mașinilor sunt doar pentru a crește capacitatea.
+## Realizarea comunicării directe cu daemonul Docker
+
+Pentru a rula comenzi pe mașina cu rol de manager există comanda `docker-machine ssh "comanda"`. Pentru a lucra cu daemonul Docker de pe mașina virtuală, mai există comanda `docker-machine env <numelemașinii>`. În cazul exercițiului desfășurat ar fi `docker-machine env virtuala1`. Răspunsul venit înapoi poate fi ceva similar cu următorul.
+
+```txt
+export DOCKER_TLS_VERIFY="1"
+export DOCKER_HOST="tcp://192.168.99.100:2376"
+export DOCKER_CERT_PATH="/home/nico/.docker/machine/machines/virtuala1"
+export DOCKER_MACHINE_NAME="virtuala1"
+# Run this command to configure your shell: 
+# eval $(docker-machine env virtuala1)
+```
+
+Pentru a configura shell-ul în scopul stabilirii unui canal de comunicare cu mașina virtuală, vom rula următoarea comandă: `eval $(docker-machine env virtuala1)`. În acest moment shell-ul prezent va fi conectat direct la daemonul Docker de pe mașina virtuală. Putem rula comenzi directe acestuia cu scopul de a gestiona swarm-ul.
+
+```bash
+docker-machine ls
+```
+
+Comanda va afișa informații foarte utile despre mașinile care se află în swarm și starea acestora. Dacă nu mai dorești să ai consola conectată la managerul de swarm, poți să o decuplezi cu `eval $(docker-machine env -u)`.
+
+De fiecare dată când deschizi un shell nou, trebuie să treci prin aceiași pași. Folosind această procedură te poți conecta la toate mașinile din swarm.
+
+## Repornirea mașinilor
+
+În cazul în care la o investigare cu `docker-machine ls` dintr-o consolă conectată se constată faptul că o mașină s-a oprit, o poți reporni cu `docker-machine start <machine-name>`.
 
 ## Rulează aplicația pe swarm
 
+Pentru a rula aplicația pe swarm trebuie să faci un așa-zis deployment. Aflat în shell-ul care este conectat la daemonul Docker de pe mașina virtuală cu rol de manager, vei rula comanda de deployment (vezi și exemplul explicat la docker services).
+
+```bash
+docker stack deploy -c docker-compose.yml testApp
+```
+
+În acest moment aplicația va fi instalată în swarm. Pentru a vedea cum s-a distribuit efortul pe swarm, poți face o interogare din consola conectată cu `docker stack ps numeApp`. Accesarea aplicației se poate face de pe IP-urile ambelor mașini virtuale. Reține faptul că între mașinile virtuale participante este creată o rețea care este balansată. Folosind o consolă conectată la managerul de swarm, poți afla IP-urile acestor mașii cu `docker-machine ls`.
+
+Dacă în `docker-compose.yml` ai specificat cinci instanțe ale aplicației, vei vedea cu `docker-machine ls` cum aceste containre beneficiază de mecanismul de load-balancing.
+
+```yml
+version: "3"
+services:
+  web:
+    image: kosson/numeImagine:0.1
+    deploy:
+      replicas: 5
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "4000:80"
+    networks:
+      - webnet
+networks:
+  webnet:
+```
+
+Motivul pentru care ambele IP-uri funcționează deschizînd aplicația este pentru că toate nodurile sunt prinse într-o rețea de routare - ingress routing mesh. Acest lucru înseamnă că în cazul unei aplicații care răspunde pe un anumit port, acel port este rezervat indiferent de nodul care rulează containerul.
+
+![](img/ingress-routing-mesh.png)
+
+## Iterare și scalare
+
+Pentru a opera orice modificări asupra aplicației care rulează pe swarm, vei urma aceiași pași de la momentul constituirii fișierului `docker-compose.yml`, pe care poate că vei dori să-l modifici, urmat apoi de reconstruirea imaginii căreia îi faci push în Docker Hub. Pentru a opera modificările și în swarm, va trebui să faci un `docker stack deploy`.
+Dacă mărești capacitatea swarm-ului printr-un `docker join swarm` va trebui să faci din nou un deployment cu `docker stack deploy`.
+
+## Imagini stocate privat
+
+Dacă imaginile necesare construirii containerelor se află într-o zonă privată, mai întâi va trebui să te loghezi la acel registry privat `docker login registry.example.com`. La momentul în care faci deployment-ul, va trebui să pasezi opțiunea `--with-registry-auth`, precum în `docker stack deploy --with-registry-auth -c docker-compose.yml testApp`.
+
+Ceea ce se petrece este că token-ul de login va trece de pe clientul local către nodurile swarm-ului în care serviciul face deploy.
+
+## Copierea fișierelor pe cluster
+
+```bash
+docker-machine scp <file> <machine>:~
+```
+
+## Demontarea suitei de servicii
+
+Pentru a desface literalmente suita de servicii (*stack*) existentă în swarm, va trebui să inițiezi o comandă `docker stack rm testApp`.
+
+Dacă este necesar, după ce ai demontat suita de servicii, poți renunța la swarm. Pentru workeri va trebui să inițiezi individual din shell `docker-machine ssh virtuala2 "docker swarm leave"`, iar pentru manager poți executa `docker-machine ssh virtuala1 "docker swarm leave --force"`.
+
+Pentru că uneori rămâne agățat în rulare `docker-proxy` blocând portul 443, va trebui să te asiguri rulând.
+
+```bash
+sudo service docker stop
+sudo rm -f /var/lib/docker/network/files/local-kv.db
+```
+
+Urmat de o repornire a daemonului.
+
+```bash
+sudo service docker start
+```

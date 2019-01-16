@@ -25,15 +25,19 @@ networks:
   webnet:
 ```
 
-Exemplul instruiește motorul docker să descarce de pe web imaginea `numeImagine` cu versiunea `0.1` din depozitul online al lui Docker. Apoi fă un deployment care să genereze 5 containere ale aceleiași imagini. Cele cinci instanțe vor constitui un singur serviciu care va purta numele generic de `web`. Dacă în timpul exploatării vei modifica numărul de replici, trebuie să inițiezi din nou comanda `docker stack deploy -c docker-compose.yml testApp` fără a reporni containerele.
+Exemplul instruiește motorul docker să descarce de pe web imaginea `numeImagine` cu versiunea `0.1` din depozitul online al utilizatorului kosson de la Docker Hub. Apoi fă un deployment care să genereze 5 containere ale aceleiași imagini. Cele cinci instanțe vor constitui un singur serviciu care va purta numele generic de `web`. Ceea ce tocmai s-a realizat poate fi privit ca o stivă de servicii, în engleză, un `stack`.
 
- Resursele pe care fiecare container le va consuma sunt 10% din toată puterea de calcul pe care o oferă procesoarele mașinii. Fiecare instanță nu trebuie să depășească mai mult de 50M. Dacă unul din containere cade, repornește-l imediat.
+Dacă în timpul exploatării vei modifica numărul de replici sau alte modificări, trebuie să inițiezi din nou comanda `docker stack deploy -c docker-compose.yml testApp` fără a reporni containerele. pentru că aplicația noastră trebuie să aibă un nume, o vom denumi `testApp`.
+
+Resursele pe care fiecare container le va consuma sunt 10% din toată puterea de calcul pe care o oferă procesoarele mașinii. Fiecare instanță nu trebuie să depășească mai mult de 50M. Dacă unul din containere cade, repornește-l imediat.
 Apoi leagă portul 4000 al serviciului cu portul 80 al mașinii.
 În cadrul acestui serviciu, se va construi rețeaua `webnet` care va beneficia de un mecanism de balansare.
 
 În final, vei declara rețeaua `webnet` pentru a fi inițiată de motor.
 
-Pentru a rula aplicația, mai întâi trebuie pornit roiul cu `docker swarm init`. Întreaga aplicație trebuie să poarte un nume, de exemplu `testApp`. Acum poți rula comanda care va porni această aplicație: `docker stack deploy -c docker-complose.yml testApp`.
+## Rularea aplicației într-un swarm
+
+Pentru a rula aplicația, mai întâi trebuie pornit roiul cu `docker swarm init`. Conectează shell-ul curent la mașina virtuală care joacă rol de manager de swarm `docker-machine env virtuala1` urmat de `eval $(docker-machine env virtuala1)`. Întreaga aplicație trebuie să poarte un nume, de exemplu `testApp`. Acum poți rula comanda care va porni această aplicație: `docker stack deploy -c docker-complose.yml testApp`.
 
 Pentru a lista serviciile care au pornit, poți folosi comanda `docker service ls`.
 
@@ -41,4 +45,4 @@ Un singur container care rulează într-un serviciu se numește `task`. Task-uri
 
 Pentru a lista serviciile aferente unei aplicații rulezi `docker service ps numeAplicatie`.
 
-Pentru a opri aplicația, vei inișia comanda `docker stack rm restApp` și vei dezactiva roiul - swarm-ul cu `docker swarm leave --force`.
+Pentru a opri aplicația, vei iniția comanda `docker stack rm restApp` și vei dezactiva roiul - swarm-ul cu `docker swarm leave --force`.
