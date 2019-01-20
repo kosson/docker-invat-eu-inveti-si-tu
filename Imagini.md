@@ -79,11 +79,11 @@ RUN touch index.js > "console.log('BAU, BAU!')"
 EXPOSE 3000
 ```
 
-Instrucțiunea `FROM` îi comunică daemonului `docker` ce imagine de bază să folosească pentru construirea noii imagini. Instrucțiunea `MAINTAINER` indică utilizatorul care se ocupă de imagine. Instrucțiunea `RUN` comunică `docker builder`-ului ce aplicații trebuie instalate și ce scripturi trebuie rulate pentru a crea suportul de rulare al aplicației.
+Instrucțiunea `FROM` îi comunică daemonului `docker` ce imagine de bază să folosească pentru construirea noii imagini. Instrucțiunea `MAINTAINER` indică utilizatorul care se ocupă de imagine. Instrucțiunea `RUN` comunică `docker build`-erului ce aplicații trebuie instalate și ce scripturi trebuie rulate pentru a crea suportul de rulare al aplicației. Subcomanda `build` construiește imagini dintr-un fișier `Dockerfile` și un *context*.
 
 Fiecare instrucțiune are drept efect construirea unui nivel intermediar atunci când imaginea este constituită.
 
-O mențiune privind volumele. Dacă specifici în `Dockerfile` necesitarea ca viitorul container generat în baza imaginii să constituie un director în care să persiste datele pe mașina gazdă, dacă vei avea instrucțiuni care ar trebui să pună ceva în director, la momentul creării legăturilor cu directorul de pe mașina gazdă, se vor pierde toate fișierele generate prin execuția unui `RUN`. Ar fi de preferat, ca directoarele de persistență să fie declarate la rularea containerului cu `docker run`.
+O mențiune privind volumele. Dacă specifici în `Dockerfile` necesită ca viitorul container generat în baza imaginii să constituie un director în care să persiste datele pe mașina gazdă, dacă vei avea instrucțiuni care ar trebui să pună ceva în director, la momentul creării legăturilor cu directorul de pe mașina gazdă, se vor pierde toate fișierele generate prin execuția unui `RUN`. Ar fi de preferat, ca directoarele de persistență să fie declarate la rularea containerului cu `docker run`.
 
 #### Pasul 2 - construirea imaginii
 
@@ -153,3 +153,22 @@ După ce ai construit imaginea, vei dori să o rulezi.
 ```bash
 sudo docker run -t -i nicolaie/node_test:v1 node index.js
 ```
+
+## Tehnici de construcție
+
+Atunci când ai de rulat mai multe comenzi `RUN`, fiecare dintre acestea vor forma un nou layer în imagine. Este de preferat să fie folosite comenzile de shell care concatenează operațiunile.
+
+```yaml
+RUN apt -y update
+RUN apt i -y python
+```
+
+Poate fi concatenat în:
+
+```yaml
+RUN apt -y update && apt i -y python
+```
+
+### Multiple imagini
+
+Când vei construi o imagine pe care să o consideri fiind cea de bază, adică una care să ofere funcționalități aplicațiilor și dacă este posibil și altor containere, trebuie să urmezi o politică de setare a tag-urilor care să reflecte intențiile de exploatare. De exemplu, poți avea imaginea de bază cu tag-ul `base`, iar cea de `debugging` notată cu un tag `devel`.

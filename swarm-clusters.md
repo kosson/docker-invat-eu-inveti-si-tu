@@ -215,7 +215,7 @@ Pentru a desface literalmente suita de servicii (*stack*) existentă în swarm, 
 
 Dacă este necesar, după ce ai demontat suita de servicii, poți renunța la swarm. Pentru workeri va trebui să inițiezi individual din shell `docker-machine ssh virtuala2 "docker swarm leave"`, iar pentru manager poți executa `docker-machine ssh virtuala1 "docker swarm leave --force"`.
 
-Pentru că uneori rămâne agățat în rulare `docker-proxy` blocând portul 443, va trebui să te asiguri rulând.
+Pentru că uneori rămâne agățat în rulare `docker-proxy` blocând portul 443, va trebui să te asiguri că ai închis cu adevărat procesul.
 
 ```bash
 sudo service docker stop
