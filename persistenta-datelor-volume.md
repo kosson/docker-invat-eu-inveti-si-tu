@@ -25,6 +25,12 @@ docker run -v /date -it busybox
 
 Astfel, vei crea un director nou montat în container. Driverele pentru volume permit stocarea volumelor la distanță dacă acest lucru este dorit și pot oferi și criptare. Noile volume au conținutul pre-populat de un container, de regulă.
 
+În momentul în care nu mai ai nevoie de un container la care dorești să renunți, ai posibilitatea de a elimina și volumul creat pentru acesta. Tot ceea ce trebuie să faci este să adaugi opțiunea `-v`.
+
+```bash
+docker rm -v 03fr44343
+```
+
 Volumele nu măresc dimensiunea containerelor care le folosesc pentru că pur și simplu, nu sunt legat organic de containere.
 
 Volumele pot fi numite sau anonime. Cele anonime sunt montate primele de container și li se dau un nume aleatoriu. Nu există nicio diferență de comportament între cele două. Volumele mai permit stocarea datelor pe mașini la distanță sau în cloud. Volumele sunt șterse numai când acest lucru este dorit înadins.
