@@ -30,7 +30,7 @@ Putem numi noi containerele cum dorim. În momentul rulării subcomenzii `run`, 
 docker container run --publish 80:80 --detach --name kosson-starter-kick nginx
 ```
 
-Resultatul va fi că în listă va apărea containerul numit înadins.
+Rezultatul va fi că în listă va apărea containerul numit înadins.
 
 ```bash
 $ docker container ls
@@ -54,7 +54,7 @@ docker container run --publish 80:80 nginx
 
 Această comandă va descărca și instanția un server nginx care va fi activat pe porturile specificate de îndată ce este descărcat.
 
-![InstalareNginx.png](/media/nicolaie/DATA/DEVELOPMENT/DOCKER/InstalareNginx.png)
+![InstalareNginx.png](InstalareNginx.png)
 
 În acest moment ai acces la server. Dacă portul pe care activezi serverul este deja luat, poți specifica în stânga celor două puncte un port liber pe care să se facă cererile.
 
@@ -151,7 +151,7 @@ Vei obține un acces root în container. Pentru a ieși din shell, dai `exit`. F
 
 ### Container exec
 
-Folosind această comandă, obții un shell într-un container care rulează deja
+Folosind această comandă, obții un shell într-un container care rulează deja:
 
 ```bash
 docker container exec -it mysql bash
@@ -161,6 +161,11 @@ docker container exec -it vigorous_poitras sh
 ```
 
 Este asemănătoare sub-comenzii `attach`.
+În cazul în care este folosit `docker-compose`, se poate folosi pentru a obține un shell într-un container care rulează. În exemplul de mai jos, `db` este numele serviciului ce *ridică* o bază de date.
+
+```bash
+docker-compose -f docker-compose.special.yml exec db bash
+```
 
 ## Obținerea de informații despre containere
 
@@ -272,7 +277,7 @@ Dacă ai nevoie să repornești un container, poți folosi `docker container res
 
 ## Ștergerea containerelor
 
-După ce am folosit containerele, docker oferă posibilitatea de a șterge din ele. Poți să le ștergi pe toate sau doar cele dorite la un moment dat menționând după sub-comanda `rm` mai multe id-uri aparținând containerelor care trebuie eliminate. Mai întâi vizualizează containerele existente.
+După ce am folosit containerele, Docker oferă posibilitatea de a șterge din ele. Poți să le ștergi pe toate sau doar cele dorite la un moment dat menționând după sub-comanda `rm` mai multe id-uri aparținând containerelor care trebuie eliminate. Mai întâi vizualizează containerele existente.
 
 ```bash
 docker container ls -a

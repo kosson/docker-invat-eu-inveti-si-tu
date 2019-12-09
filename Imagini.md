@@ -30,7 +30,7 @@ Dacă ai nevoie să cauți o anumită imagine, poți folosi `sudo docker search 
 Acest lucru se face apelând comanda
 
 ```bash
-bash docker rmi identificator_imagine
+docker rmi identificator_imagine
 ```
 
 ### Listarea și aducerea imaginilor disponibile
