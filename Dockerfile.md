@@ -135,7 +135,11 @@ USER gigel
 
 ## Instrucțiunea RUN
 
-Permite rularea de comenzi la momentul constituirii de noi imagini. Poți folosi o singură instrucțiune `RUN` pentru a reduce numărul de layere care se vor constitui.
+Această instrucțiune permite instalarea de aplicații care vor rula la momentul constituirii containerului.
+
+Permite rularea de comenzi la momentul constituirii de noi imagini. Rezultatul fiecărei comenzi rulate cu `RUN` creează tot atâtea niveluri ale imaginii. `RUN` are două forme. Una care rulează o singură comandă simplă la nivel de shell, dar poate rula și o instrucțiune care are parametri - `RUN ["executabil", "param1", "param2"]` (exec form).
+
+Poți folosi o singură instrucțiune `RUN` pentru a reduce numărul de layere care se vor constitui. Aceasta este forma proprie shell-ului.
 
 ```yaml
 version: "3"
@@ -167,13 +171,27 @@ RUN npm install
 RUN npm install -g pm2
 ```
 
+Dacă `RUN` este o comandă care primește mai mulți parametri, mai întâi este menționată comanda și apoi sunt trecuți toți parametrii.
+
+```yaml
+RUN ["apt-get", "install", "python3"]
+```
+
 ## Instrucțiunea CMD
+
+Instrucțiunea `CMD` permite setarea unei comenzi care va fi lansată din oficiu la momentul în care pornește containerul. În cazul în care containerul rulează cu o comandă, cea setată din oficiu cu `CMD`, va fi ignorată. Forme posibile:
+
+- `CMD ["executabil","param1","param2"]`, fiind forma executabilă și cea care este preferabilă;
+- `CMD ["param1","param2"]`, care va seta parametri suplimentari pentru forma de executabil setată prin `ENTRYPOINT`;
+- și o formă simplă de shell: `CMD command param1 param2`.
 
 Această instrucțiune poate iniția execuția oricărei comenzi, dar spre deosebire de `RUN`, rularea comenzii se va face la momentul inițierii containerului, nu la momentul constituirii imaginii.
 
 ```yaml
 CMD npm run start
 ```
+
+În exemplul nostru, dacă vom rula containerul fără a indica o comandă, se va executa ce este menționat de `CMD`. Dacă menționăm o comandă, de exemplu `docker run -it <image> /bin/bash`, se va intra într-un shell de Bash (`root@7de4bed89922:/#`), fiind ignorat `npm run start`.
 
 Aceste execuții pot fi suprascrise dacă se folosesc argumente ale sub-comenzii `run` (`docker run`).
 
@@ -184,23 +202,39 @@ CMD ["python", "app.py"]
 
 ## Instrucțiunea ENTRYPOINT
 
-Această instrucțiune este folosită atunci când dorești să folosești un container ca mediu pentru a executa o singură instrucțiune. Este ca și cum au transforma întreg containerul într-un executabil. Spre deosebire de cazul instrucțiunii `CMD`, această instruțiune nu poate fi suprascrisă prin folosirea unui `docker run`. Trebuie să ai o singură instrucțiune `ENTRYPOINT` pentru un singur container.
+Această instrucțiune este folosită atunci când dorești să folosești un container ca mediu pentru a executa o singură instrucțiune. Transformă întreg containerul într-un executabil. Această comandă este preferabilă lui `CMD` pentru că la rularea cu parametri a containerului, ceea ce era menționat la `CMD` va fi suprascris prin menționarea instrucțiunii de rulare a containerului (`docker run -it <image> Ceva`).
+
+Sunt acceptate două forme:
+
+- forma de shell: `ENTRYPOINT command param1 param2` și
+- forma de executabil, care este preferabilă: `ENTRYPOINT ["executabil", "param1", "param2"]`.
+
+Spre deosebire de cazul instrucțiunii `CMD`, această instruțiune nu poate fi suprascrisă prin folosirea unui `docker run`. Trebuie să ai o singură instrucțiune `ENTRYPOINT` pentru un singur container.
 
 ```yaml
-ENTRYPOINT ["echo","Ceva interesant și ies!"]
+ENV nume Ionică Fără-Frică
+ENTRYPOINT echo "Salutare, $nume"
 ```
 
-Construiești imaginea și o rulezi.
+Construiești imaginea:
 
 ```bash
 $ sudo docker build -t ceva-demo .
-$ sudo docker run ceva-demo
 ```
+
+La rularea imaginii cu `docker run -it ceva-demo`, rezultatul afișat va fi `Salutare, Ionică Fără-Frică`. În exemplu, am folosit o variabilă de mediu pentru a indica și aceste posibilități.
 
 În cazul în care ai nevoie de interacțiune cu mediul intern al imaginii, poți rula oricând în terminal.
 
 ```bash
 sudo docker run -it --entrypoint="/bin/sh" ceva-demo
+```
+
+Dacă ai nevoie să rulezi Bash, poți opta pentru folosirea acestui executabil.
+
+```yaml
+ENV nume Ionică Fără-Frică
+ENTRYPOINT ["/bin/bash", "-c", "echo "Salutare, $nume"]
 ```
 
 ## Instrucțiunea HEALTHCHECK

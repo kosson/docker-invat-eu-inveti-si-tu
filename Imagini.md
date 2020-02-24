@@ -13,7 +13,7 @@ Pentru a investiga modificările aduse unei imagini, vei folosi `docker history`
 
 ### Registrul imaginilor
 
-Imagini Docker pot fi găsite în registre online cum este cel de la hub.docker.com. Pentru a aduce o imagine pe mașina locală vei executa `sudo docker pull numeimagine`. Dacă nu menționezi versiunea de imagine, va fi adusă cea care poartă eticheta `latest`. Acest lucru implică și faptul că poți contrui imagini pe care să le versionezi. Pentru a aduce o anumită versiune, trebuie să menționezi numărul versiunii: `sudo docker pull busybox:1.24`.
+Imagini Docker pot fi găsite în registre online cum este cel de la hub.docker.com. Pentru a aduce o imagine pe mașina locală vei executa `sudo docker pull numeimagine`. Dacă nu menționezi versiunea de imagine, va fi adusă cea care poartă eticheta `latest`. Acest lucru implică și faptul că poți construi imagini pe care să le versionezi. Pentru a aduce o anumită versiune, trebuie să menționezi numărul versiunii: `sudo docker pull busybox:1.24`.
 
 Dacă ai construit o imagine, poți să o încarci online folosind `sudo docker push imagine`.
 
@@ -95,7 +95,7 @@ sudo docker build -f Dockerfile -t nicolaie/node_test:v1 .
 ```
 
 Opțiunea `-t`, prescurtare de la `--tag`, este utilizată pentru a identifica imaginea printr-o etichetă. În cazul în care folosești un alt fișier de construcție, care nu este cel canonic (`Dockerfile`), numit altfel, poți specifica numele fișierului care trebuie folosit prin opțiunea `-f cale/NumeFisier`.
-Opțiunea punct `.` comunică builder-ului că fișierul Docker este chiar în acest director de unde se face build-ul. Punctul are același rol ca în Bash - indică directorul curent. Dacă fișierul nu este în directorul curent, se poate menționa calea.
+Opțiunea punct `.` comunică builder-ului că fișierul **Dockerfile** este chiar în acest director de unde se face build-ul. Punctul are același rol ca în Bash - indică directorul curent. Dacă fișierul nu este în directorul curent, se poate menționa calea.
 
 ```bash
 Sending build context to Docker daemon  266.9MB
