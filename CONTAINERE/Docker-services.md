@@ -104,9 +104,13 @@ eval $(docker-machine env virtuala1)
 Faci imediat un redeployment cu `docker stack deploy -c docker-compose.yml testApp`.
 Verifici imediat pentru a vedea dacă serviciul redis a fost adăugat cu succes: `docker service ls`. Apelând la vizualizator, serviciul ar trebui să apară.
 
-## Docker services
+## Servicii Docker
 
-Serviciile Docker sunt un plan de construcție al tuturor containerelor care vor fi folosite. În cazul unei aplicații distribuite, componentele se numesc *servicii*. Aceste servicii nu sunt nimic altceva decât containere. Un singur serviciu este constituit de o singură imagine.
+Serviciile Docker sunt un plan de construcție al tuturor containerelor care vor fi folosite. În cazul unei aplicații distribuite, componentele se numesc *servicii*. Aceste servicii nu sunt nimic altceva decât containere. Un singur serviciu este constituit de o singură imagine. Serviciile permit scalarea containerelor prin folosirea cu mai mulți daemon-uri, care lucrează împreună ca un `swarm` având multipli manageri și workeri. Fiecare membru a unui swarm este un daemon Docker. Toți daemonii comunică folosind API-ul Docker.
+
+Un serviciu permite definirea unei stări dorite.
+
+### Construirea serviciilor
 
 Aceste servicii sunt definite prin construirea unui fișier `docker-compose.yml`.
 
