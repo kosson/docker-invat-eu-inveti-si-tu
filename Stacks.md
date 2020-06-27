@@ -48,8 +48,7 @@ Aceleași informații le-am putea obține și din consola conectată executând 
 
 Pentru a păstra un set de date, putem angaja o instanță de Redis.
 
-
-```yml
+```yaml
 version: "3"
 services:
   web:

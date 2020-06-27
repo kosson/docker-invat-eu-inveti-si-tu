@@ -80,7 +80,7 @@ docker run -d -p 3000:3000 --link bazaMongo:mongodb kosson/node_ca
 
 ## Bridge networks
 
-Rețeaua `bridge` este cea care este oferită din oficiu pentru containere cu singura condiție să nu fie specificată alta prin opțiunea `--net` la momentul rulării unui container cu `docker run`.
+Rețeaua `bridge` este cea care este oferită din oficiu pentru containere cu singura condiție să nu fie specificată alta prin opțiunea `--net` la momentul rulării unui container cu `docker run`. Ai putea rula un container specificând această opțiune: `docker run --network="bridge"`. Numele acestui bridge este `docker0`. Și gazda și containerul au o adresă în acel bridge.
 
 Pentru a vedea configurarea unei astfel de rețele, se poate invoca rapid un `docker network inspect bridge`. Vei primi drept răspuns un JSON asemănător cu următorul.
 
@@ -232,3 +232,8 @@ Uneori este foarte rapid să vezi care este IP-ul unui container prin executarea
 ```bash
 docker container exec ceva.sh ping -c 3 node_server
 ```
+
+## Resurse
+
+- [From inside of a Docker container, how do I connect to the localhost of the machine?](https://stackoverflow.com/questions/24319662/from-inside-of-a-docker-container-how-do-i-connect-to-the-localhost-of-the-mach)
+- [Networking features in Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/networking/)

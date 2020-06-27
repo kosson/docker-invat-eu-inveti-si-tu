@@ -61,9 +61,9 @@ Imediat după commit, imaginea va apărea printre cele deja existente și este g
 
 ### Crearea imaginilor cu Dockerfile
 
-În acest sens, vei crea un fișier `Dockerfile` care conține instrucțiuni care vor face toate operațiunile necesare operaționalizării. Comanda de lucru este `docker build`.
+În acest sens, vei crea un fișier `Dockerfile` care conține instrucțiuni necesare realizării operațiunilor necesare creării. Comanda de lucru este `docker build`.
 
-#### Pasul 1 - scrierea lui Dockerfile
+#### Pasul 1 - scrierea fișierului Dockerfile
 
 Acest fișier este responsabil de construcția imaginii. Fiecare linie dintr-un fișier `Dockerfile` este constituit din instrucțiuni urmate de câte o declarație.
 Fiecare instrucțiune creează câte un nivel al imaginii atunci când este generată imaginea.
@@ -88,7 +88,6 @@ O mențiune privind volumele. Dacă specifici în `Dockerfile` necesită ca viit
 #### Pasul 2 - construirea imaginii
 
 După ce ai elaborat fișierul pe baza căruia se va construi imaginea, vei apela sub-comanda `build` pentru a genera noua imagine. Dacă fișierul `Dockerfile` se află în același director în care te afli deja, nu mai este necesară specificarea lui folosind opțiunea `--file` (pe scurt `-f`). Se înțelege că există deja acolo.
-
 
 ```bash
 sudo docker build -f Dockerfile -t nicolaie/node_test:v1 .
@@ -151,7 +150,7 @@ O imagine docker poate avea maxim 147 niveluri.
 După ce ai construit imaginea, vei dori să o rulezi.
 
 ```bash
-sudo docker run -t -i nicolaie/node_test:v1 node index.js
+sudo docker run -it nicolaie/node_test:v1 node index.js
 ```
 
 ## Tehnici de construcție

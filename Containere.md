@@ -8,6 +8,8 @@ Docker ia o aplicație pe care o ambalează într-un sistem de fișiere. Acesta 
 
 Un container poate fi conectat la una sau mai multe rețele. I se poate atașa un mediu de stocare sau se poate crea o nouă imagine pe baza stării sale curente. Funcționarea containerelor se leagă de tehnologia prin care se realizează `namespaces`. Acestea oferă spațiile de lucru protejate care sunt, de fapt folosite la rularea containerelor. Fiecare container creează un set de `namespaces`. Aceste namespaces oferă niveluri de izolare pentru diferitele componente care rulează în container. Docker engine combină namespace-urile, control group-urile și UnionFS într-o unitate numită *format de container*.
 
+Într-un container, toate aplicațiile rulează ca root. Un cont de root din container nu este contul de root al mașinii gazdă. Pentru a elimina problemele ce țin de securitate, se recomandă rularea aplicațiilor în containere sub un user creat, nu sub root.
+
 ## Detalii tehnice
 
 Tehnologia containerelor din Docker izolează un proces căruia îi oferă din resursele mașinii gazdă. Docker folosește pentru a realiza această izolare un sistem de fișiere numit OverlayFS care poate distribui resursele mașinii gazdă între diferitele containere.
@@ -80,7 +82,7 @@ Va fi returnat un identificator unic pentru containerul care rulează nginx. De 
 
 Chiar dacă poți rula un container separat, ceea ce face din Docker o tehnologie cu adevărat demnă de atenție este faptul că poți parametriza funcționarea containerului printr-un fișier dedicat numit `Dockerfile`. Acest lucru presupune că vei folosi o imagine deja existentă, nu una pe care să o construiești de la 0. Un exemplu de rulare a unei aplicații de Python pe care-l oferă documentația.
 
-```yml
+```yaml
 # Folosești un runtime oficial drept punct de construcție a noii imagini
 FROM python:2.7-slim
 # Setezi directorul în care vei pune resursele aplicației la /app
@@ -171,10 +173,15 @@ docker-compose -f docker-compose.special.yml exec db bash
 
 ### Listarea containerelor create
 
-Pentru a vedea câte containere sunt pornite, poți folosi `docker container ls`.
+Pentru a vedea câte containere sunt pornite, poți folosi `docker container ls`
 
 ```bash
 $ docker container ls
+```
+
+cu rezultatul
+
+```text
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                NAMES
 ec44ed53308c        nginx               "nginx -g 'daemon of…"   2 minutes ago       Up 2 minutes        0.0.0.0:80->80/tcp   loving_allen
 ```
@@ -277,10 +284,15 @@ Dacă ai nevoie să repornești un container, poți folosi `docker container res
 
 ## Ștergerea containerelor
 
-După ce am folosit containerele, Docker oferă posibilitatea de a șterge din ele. Poți să le ștergi pe toate sau doar cele dorite la un moment dat menționând după sub-comanda `rm` mai multe id-uri aparținând containerelor care trebuie eliminate. Mai întâi vizualizează containerele existente.
+După ce am folosit containerele, Docker oferă posibilitatea de a șterge din ele. Poți să le ștergi pe toate sau doar cele dorite la un moment dat menționând după sub-comanda `rm` mai multe id-uri aparținând containerelor care trebuie eliminate. Mai întâi vizualizează containerele existente
 
 ```bash
 docker container ls -a
+```
+
+cu un rezultat asemănător cu
+
+```text
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS                NAMES
 c6e614f7c8ad        nginx               "nginx -g 'daemon of…"   12 minutes ago      Up 12 minutes               0.0.0.0:80->80/tcp   kosson-starter-kick
 89fcdc7a99d3        nginx               "--name kosson-start…"   13 minutes ago      Created                     0.0.0.0:80->80/tcp   loving_shannon
@@ -358,3 +370,4 @@ docker container update --cpu-shares 512 --memory 128M --memory-swap 256M server
 ## Resurse
 
 - [Containers](https://docs.docker.com/get-started/part2/)
+- [How to access host port from docker container](https://stackoverflow.com/questions/31324981/how-to-access-host-port-from-docker-container)

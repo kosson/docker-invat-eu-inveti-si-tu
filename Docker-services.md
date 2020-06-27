@@ -4,7 +4,7 @@ Serviciile Docker sunt un plan de construcție al tuturor containerelor care vor
 
 Aceste servicii sunt definite prin construirea unui fișier `docker-compose.yml`.
 
-```yml
+```yaml
 version: "3"
 services:
   web:
@@ -25,7 +25,7 @@ networks:
   webnet:
 ```
 
-Exemplul instruiește motorul docker să descarce de pe web imaginea `numeImagine` cu versiunea `0.1` din depozitul online al utilizatorului kosson de la Docker Hub. Apoi fă un deployment care să genereze 5 containere ale aceleiași imagini. Cele cinci instanțe vor constitui un singur serviciu care va purta numele generic de `web`. Ceea ce tocmai s-a realizat poate fi privit ca o stivă de servicii, în engleză, un `stack`.
+Exemplul instruiește motorul `docker` să descarce de pe web imaginea `numeImagine` cu versiunea `0.1` din depozitul online al utilizatorului kosson de la Docker Hub. Apoi fă un deployment care să genereze 5 containere ale aceleiași imagini. Cele cinci instanțe vor constitui un singur serviciu care va purta numele generic de `web`. Ceea ce tocmai s-a realizat poate fi privit ca o stivă de servicii, în engleză, un `stack`.
 
 Dacă în timpul exploatării vei modifica numărul de replici sau alte modificări, trebuie să inițiezi din nou comanda `docker stack deploy -c docker-compose.yml testApp` fără a reporni containerele. pentru că aplicația noastră trebuie să aibă un nume, o vom denumi `testApp`.
 

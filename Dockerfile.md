@@ -22,7 +22,7 @@ Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`
 
 ## Instrucțiunea FROM
 
-Este una dintre cele mai importante instrucțiuni și setează imaginea de la care se va porni construcția imaginii personalizate. Dacă imaginea nu există deja pe computerul gazdă, aceasta va fi trasă de pe hub.
+Este una dintre cele mai importante instrucțiuni și setează imaginea de la care se va porni construcția imaginii personalizate. Dacă imaginea nu există deja pe computerul gazdă, aceasta va fi trasă de pe [hub](https://hub.docker.com).
 
 Semnătura este `FROM <image>[:tag|@<digest>]`.
 
@@ -31,6 +31,26 @@ La `<image>` va fi precizat numele imaginii care va fi utilizată ca cea de baz�
 ```yaml
 FROM jessie:sha256:0b0043fe043....
 ```
+
+Începând cu versiunea 17 a lui docker, se pot construi imagini în mai multe etape (multi-stage), care implică faptul că poți folosi o imagini pentru atingerea mai multor posibile utilități, fără a fi silit să construiești imagini separate în funcție de serviciile dorite. Pentru a realiza acest lucru, instrucțiunea `FROM` permite alias-uri ale unei imagini care să fie folosite în același Dockerfile.
+
+```yaml
+FROM node as productie
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm install && npm cache clean --force
+COPY . .
+CMD ["node", "./bin/www"]
+FROM productie as development
+ENV NODE_ENV=development
+RUN npm install --only=development
+CMD ["nodemon", "./bin/www", "--inspect=0.0.0.0:9229"]
+```
+
+În cazul acesta, dacă faci un build fără a specifica care imagine dorești să o construiești, se va constitui imaginea menționată ultima în fișierul Dockerfile. Rulând comanda `docker build -t aplicatie .`, va genera imaginea de dezvoltare, aceasta fiind cea menționată ultima.
+Pentru a construi imaginea de producție, vei executa comanda specifică `docker build -t aplicatie:productie --target productie .`.
+
+Observă faptul că pentru a doua imagine dedicată dezvoltării, avem opțiunea de instalare a pachetelor `RUN npm install --only=development`. Această instalare se va restricționa doar la cele necesare dezvoltării locale.
 
 ## Instrucțiunea MAINTAINER
 
@@ -42,6 +62,7 @@ MAINTAINER Bibi Sandu <bibi.sandu@gica.ro>
 
 ## Instrucțiunea COPY
 
+Această comandă este preferabilă lui `ADD` care permite mult mai multe decât `COPY`.
 Această instrucțiune permite copierea de fișiere din sistemul de operare gazdă în sistemul de fișiere al noii imagini.
 
 ```yaml
@@ -71,6 +92,12 @@ Un alt exemplu ar fi copierea fișierelor `package.json` și `package-lock.json`
 ```yaml
 COPY package*.json ./
 ```
+
+## Instrucțiunea WORKDIR
+
+Permite crearea unui director în cazul în care acest nu există. Nu folosi MKDIR sau CD atunci când construiești eșafodajul viitoarei imagini. Folosește întotdeauna `WORKDIR`.
+
+Singura problemă cu `WORKDIR` este că atunci când ai nevoie de anumite permisiuni, ar fi mai bine să fie folosit `RUN mkdir`.
 
 ## Instrucțiunea ADD
 
@@ -290,11 +317,17 @@ EXPOSE numarPort/numeProtocol altPortDacaENevoie
 EXPOSE 80/tcp
 ```
 
-Dacă ai nevoie poți menționa mai multe porturi deodată.
+Dacă ai nevoie poți menționa mai multe porturi deodată
 
 ```yaml
 EXPOSE 3000
 EXPOSE 9200
+```
+
+sau porturile pe care dorești expuse precum în
+
+```yaml
+EXPOSE 8080 9200 6379 443
 ```
 
 ## Instrucțiunea LABEL

@@ -1,0 +1,9 @@
+FROM node as productie
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm install && npm cache clean --force
+COPY . .
+CMD ["node", "./bin/www"]
+FROM productie as development
+ENV NODE_ENV=development
+CMD ["nodemon", "./bin/www", "--inspect=0.0.0.0:9229"]
