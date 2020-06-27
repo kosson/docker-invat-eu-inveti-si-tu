@@ -114,10 +114,10 @@ docker run -d busybox
 Ceea ce se întâmplă atunci când rulezi un container este că o imagine este luată drept input și este lansată ca un container. Un container poate rula în modul interactiv dacă comenzii `run` îi sunt adăugate fanioanele `-t` și `-i`. Fanionul `-i` este cel care face rularea containerului în mod interactiv. Ceea ce se petrece în spate este o capturare a input-ului standard al acelui container (STDIN-ul). Fanionul `-t` alocă un pseudo-terminal (TTY) pe care îl atribuie containerului tocmai pornit.
 
 ```bash
-$ sudo docker run -i -t ubuntu:18.04 /bin/bash
+sudo docker run -i -t ubuntu:18.04 /bin/bash
 ```
 
-Să analizăm comanda de mai sus. Dacă imaginea de ubuntu nu există, va fi descărcată automat, fiind echivalentul unei comenzi `docker pull ubuntu`. Imediat ce a fost descărcată, se va crea automat containerul prin instanțierea sa. Acest pas este echivalentul comenzii CLI `docker container create`. Este adăugat un layer final read-write ceea ce permite operațiuni cu sistemul său local de fișiere. Următorul pas este să creeze o interfață de rețea pentru a conecta containerul la rețeaua default. Privind la comandă, nu a fost specificată nicio opțiune privind rețeaua. Acest pas implică și alocarea unei adrese IP containerului. Containerele se pot conecta la rețele externe folosind conectarea la rețeaua gazdei. În acest moment `docker` pornește containerele și execută comanda specificată `/bin/bash`. Dacă termini sesiunea de bash, containerul va fi oprit, dar nu va fi scos din lucru.
+Să analizăm comanda de mai sus. Dacă imaginea de Ubuntu nu există, va fi descărcată automat, fiind echivalentul unei comenzi `docker pull ubuntu`. Imediat ce a fost descărcată, se va crea automat containerul prin instanțierea sa. Acest pas este echivalentul comenzii CLI `docker container create`. Este adăugat un layer final read-write ceea ce permite operațiuni cu sistemul său local de fișiere. Următorul pas este să creeze o interfață de rețea pentru a conecta containerul la rețeaua default. Privind la comandă, nu a fost specificată nicio opțiune privind rețeaua. Acest pas implică și alocarea unei adrese IP containerului. Containerele se pot conecta la rețele externe folosind conectarea la rețeaua gazdei. În acest moment `docker` pornește containerele și execută comanda specificată `/bin/bash`. Dacă termini sesiunea de bash, containerul va fi oprit, dar nu va fi scos din lucru.
 
 Putem să închidem sesiunea interactivă fără a opri funcționarea containerului prin combinațiile succesive `CTRL + P` urmat de `CTRL + Q`. TTY-ul va fi deconectat de la container. Atenție, containerul va continua să funcționeze.
 
@@ -134,7 +134,7 @@ sudo docker ps
 La nevoie poți să reatașezi containerul de la care te-ai deconectat cu `sudo docker attach numeledinps`.
 
 ```bash
-$ sudo docker attach peaceful_goldwasser
+sudo docker attach peaceful_goldwasser
 ```
 
 ### Obținerea unui shell în container
@@ -176,7 +176,7 @@ docker-compose -f docker-compose.special.yml exec db bash
 Pentru a vedea câte containere sunt pornite, poți folosi `docker container ls`
 
 ```bash
-$ docker container ls
+docker container ls
 ```
 
 cu rezultatul
@@ -203,6 +203,11 @@ Poți vedea și procesele care rulează în interiorul unui container rulând co
 
 ```bash
 docker container top kosson-starter-kick
+```
+
+cu următorul rezultat posibil:
+
+```text
 UID       PID   PPID  C   STIME  TTY   TIME    CMD
 root     11653 11635  0   16:44   ?  00:00:00 nginx: master process nginx -g daemon off;
 systemd+ 11713 11653  0   16:44   ?  00:00:00 nginx: worker process

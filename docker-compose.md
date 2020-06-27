@@ -11,7 +11,7 @@ Acest fișier este folosit pentru configurarea serviciilor. De fapt ceea ce poț
 Fișierele de configurare se construiesc după cerințele unei versiuni. Fișierele `docker-compose.yml` au la început menționată versiunea de fișier. În secțiunea `services` sunt menționate cele care vor fi folosite: `node`, `mongodb`, etc.
 
 ```yaml
-version: '2'
+version: '2.4'
 services:
   node:
     build:
@@ -24,7 +24,7 @@ services:
 În cazul de mai sus, serviciul `node` va fi unul particularizat pentru că construit pornind cu fișierele din directorul curent (`.`), menționat la `context`, folosind fișierul `Dockerfile` numit `dockerfilenode`. Pe scurt, vom căuta să *injectăm* aplicația proprie pe un layer suplimentar chiar în imaginea de node. Pentru ca toate containerele care vor rula, trebuie să existe o rețea în care să comunice. Rețeaua va fi precizată cu un nume la alegere la secțiunea `networks`. Uzual, rețeaua este de tip `bridge`. Serviciului `node` îi poți adăuga un `mongodb`.
 
 ```yaml
-version: '2'
+version: '2.4'
 services:
   node:
     build:
@@ -64,7 +64,7 @@ Versiunea de lucru care trebuie specificată pentru fișierul `docker-compose.ym
 
 În cazul în care dorești ca un volum să fie cunoscut după un nume date de tine, dar să fie legat de un director din imagine, acest lucru trebuie menționat în fișierul `docker-compose.yml` în mod explicit.
 
-Acest lucru este echivalentul creării unui volum mai întâi rulând `docker volume create volume nume_dorit_al_volumului`, urmat de atașarea volumului la container.
+Acest lucru este echivalentul creării unui volum mai întâi rulând `docker volume create volume nume_dorit_al_volumului`, urmat de atașarea volumului la container. Locul unde se va opera cu directorul legat de container, va fi cel de unde se va executa comanda `docker container`.
 
 ```bash
 docker container run -d --name redis -v nume_dorit:/data --network reteaua_containerelor redis:alpine
@@ -73,7 +73,7 @@ docker container run -d --name redis -v nume_dorit:/data --network reteaua_conta
 Acest lucru se realizează mai simplu prin introducerea directă în `docker-compose.yml`.
 
 ```yaml
-version "3"
+version "2.4"
 services:
   redis:
     image: alpine:redis
@@ -94,10 +94,12 @@ docker-compose -f docker-compose.special.yml exec db bash
 
 ## Utilitarul docker-compose drept CLI
 
+Utilitarul `docker-compose` este cea mai bună soluție atunci când se face dezvoltare locală. Nu uita faptul că versiunea 2 a fișierul docker-compose este cea mai potrivită pentru dezvoltare locală. În cazul în care nu folosești `swarm` sau `kubernetes`, cel mai bine este să folosești versiunea 2.
+
 Uneori ai nevoie să lansezi aplicațiile la momentul constituirii containerului prin rularea lui `docker-compose run`.
 
 ```yaml
-version "3"
+version "2.4"
 services:
   app:
     build: ./app
@@ -159,7 +161,7 @@ Comanda afișează o listă a serviciilor.
 
 De exemplu:
 
-```textul
+```text
 Name                    Command               State           Ports
 ---------------------------------------------------------------------------------
 sample-02_web_1   docker-entrypoint.sh node  ...   Up      0.0.0.0:3000->3000/tcp
@@ -188,7 +190,7 @@ Este o comandă pentru a executa o comandă într-un container.
 ## Studiul unui fișier `docker-compose.yml`
 
 ```yaml
-version: '3.6'
+version: '2.4'
 services:
   api:
     image: node:10.15.3-alpine
@@ -250,6 +252,50 @@ Ultima instrucțiune îi spune containerului să conecteze serviciul `api` pe re
 
 Pentru a nu crea loguri, la setarea serviciului elasticsearch, se va pune la `logging` un `driver` pe valoarea `none`.
 
+## Lucruri care trebuie evitate
+
+Nu crea alias-uri: `alias: nume_alias`. Numele serviciului va fi și numele DNS dorit. Docker face acest lucru automat. În cazul în care sunt create mai multe replici, Docker va crea automat alias-uri pentru acestea (DNSRR).
+
+Nu crea linkuri: `alias: nume_alias`. Crearea link-urilor este un lucru legat de trecutul Docker. Toate serviciile compose sunt adăugate la o rețea bridge și astfel vor putea comunica între ele pentru că numele lor vor fi și numele DNS.
+
+```yaml
+links:
+  - db
+```
+
+Nu mai menționa porturile pe care le expui pentru că toate porturile sunt extuse în rețelele Docker automat.
+
+```yaml
+ports:
+  - 8090:2368
+```
+
+Totuși, este o bună practică să menționezi porturile prin EXPOSE într-un Dockerfile pentru că documentează serviciul mai bine.
+
+```yaml
+expose:
+  - "2368"
+```
+
+Nu mai preciza rețelele la finalul fișierului. O rețea este creată din oficiu de Docker ceea ce face menționarea rețelelor superfluă.
+
+Nu menționa numele containerului atunci când definești serviciul pentru că vei avea rareori nevoie să controlezi containerul direct.
+
+```yaml
+container_name: db
+```
+
+Pune întotdeauna valorile de mediu ultimele într-un `docker-compose`.
+
+Nu crea o rețea dacă folosești doar una. Docker creează automat o rețea.
+
+```yaml
+networks:
+  reteauamea:
+    driver: bridge
+```
+
 ## Resurse
 
 - [Full-text search with Node.js and ElasticSearch on Docker](https://www.jsmonday.dev/articles/38/full-text-search-with-node-js-and-elasticsearch-on-docker)
+- [Version 2 | Compose file reference](https://docs.docker.com/compose/compose-file/compose-versioning/#version-2)
