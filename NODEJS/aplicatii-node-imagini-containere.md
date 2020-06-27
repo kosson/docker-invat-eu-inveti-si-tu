@@ -238,7 +238,7 @@ services:
       - DEBUG=sample-express:*
 ```
 
-Construim containerul cu `docker-compose build` și ridicăm aplicația cu `docker-compose up -d`. Pentru  vedea structura creată `docker-compose exec express bash`. Un ls pe `node_modules` ar trebui să indice un director gol.
+Construim containerul cu `docker-compose build` și ridicăm aplicația cu `docker-compose up -d`. Pentru vedea structura creată `docker-compose exec express bash`. Un ls pe `node_modules` ar trebui să indice un director gol.
 
 Motivul pentru care vei adopta o astfel de soluție se leagă de posibilitatea rulării și pe alte sisteme de operare. În cazul folosirii Linux, prima soluție este ok.
 
@@ -247,6 +247,115 @@ Motivul pentru care vei adopta o astfel de soluție se leagă de posibilitatea r
 În cazul în care ai nevoi să rulezi o comandă în aplicație, nu este nevoie neapărat să ai containerul pornit. Poți foarte bine să folosești `docker-compose run` și Docker va onora toate instrucțiunile și straturile din fișierul `docker-compose.yml`. În acest caz, Docker va crea un container dedicat pentru rularea comenzii.
 
 Pentru cazul în care containerul deja rulează, se va folosi `docker-compose exec`, care va crea un nou shell pentru container.
+
+### Rularea lui nodemon
+
+Atunci când dezvolți pe propriul sistem Linux, poți instala `nodemon` global, dar pentru o instalare într-un container va trebui pus într-o declarație `command`. Nu uita ca la `environment` să adaugi `- NODE_ENV=development`. Această mențiune va atrage după sine instalarea tuturor dependințelor din secțiunea `devDependencies`.
+
+```yaml
+version: '2.4'
+services:
+  express:
+    build: .
+    command: /nume_director_radacina/node_modules/.bin/nodemon ./nume_director_radacina/app.js
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/node/app
+      - /node/app/node_modules
+    environment:
+      - DEBUG=sample-express:*
+      - NODE_ENV=development
+```
+
+Pentru a putea rula aplicațiile/utilitarele care nu se află în global, va trebui amendat și `Dockerfile` cu o linie care să trimită la directorul binarelor. Este nevoie să suprascrii calea cu - `ENV PATH /nume_director_radacina/node_modules/.bin/:$PATH`.
+
+```yaml
+FROM node:14
+ENV NODE_ENV=production
+WORKDIR /aplicatii
+COPY package.json package-lock*.json ./
+RUN npm install && npm cache clean --force
+ENV PATH /nume_director_radacina/node_modules/.bin/:$PATH
+WORKDIR /aplicatii/prima
+COPY . .
+CMD ["node", "./bin/www"]
+```
+
+În acest moment ori de câte ori vei face build sau rebuild, vei avea acces la utilitare fără să mai specifici întreaga cale. S-ar fi putut pune și în `docker-compose`, dar pentru portabilitate, e mai bine în `Dockerfile`.
+
+## Rezolvarea dependințelor
+
+Uneori pot apărea situații când un serviciu depinde de pornirea sau existența altuia. Pentru a rezolva astfel de lanțuri, este nevoie să folosești `depends_on:nume_serviciu`. Această posibilitate este oferită de versiunea 2 a fișierului, nu versiunea 3.
+
+Pentru a rezolva problema dependințeler serviciilor unele de altele, mai întâi de toate, versiunea fișierului `docker-compose` trebuie să fie mare sau egal cu 2.3. Apoi, fiecare serviciu trebuie să se termine cu această linie pentru fiecare serviciu menționat în `depends_on`: `condition: service_healthy`.
+
+Să presupunem că avem un serviu complex format din mai multe servere de care este nevoie pentru a-l porni pe ultimul, care în cazul de mai jos este nginx.
+
+```yaml
+version: '2.4'
+
+services:
+
+  frontend:
+    image: nginx
+    depends_on:
+      servere:
+        condition: service_healthy
+
+  servere:
+    image: node:14.4.0
+    healthcheck:
+      # asigură-te că imaginea de node are curl preinstalat
+      test: curl -f http://127.0.0.1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:12.3
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: pg_isready -U postgres -h 127.0.0.1
+
+  mongo:
+    image: mongo:4.2.8-bionic
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+
+  mariadb:
+    image: mariadb:10.2.32-bionic
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+```
+
+Aceste teste le faci pentru a nu avea erori la pornirea lui `node` deoarece un server a întârziat sau nu a pornit.
+
+## Variabile de mediu
+
+În cazul unui `docker-compose` poți preciza variabile de mediu care nu este același lucru cu obiectul YAML `environment` pe care îl trimiți containerului la momentul în care pornește. Folosind notația `${NUMEVAR}` poți rezolva aceste valori dinamice la momentul în care fișierul YAML este procesat.
+
+```yaml
+version: '2.4'
+services:
+  node:
+    image: node:${VERSIUNE_NODE}
+```
+
+Apoi, în momentul executării `docker-compose up`, poți introduce variabila care va fi pasată în YAML.
+
+```bash
+VERSIUNE_NODE=14.4.0 docker-compose up
+```
+
+Variabilele mai pot fi puse în fișiere `.env`.
 
 ## Resurse
 
