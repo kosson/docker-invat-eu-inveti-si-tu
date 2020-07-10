@@ -290,50 +290,125 @@ Uneori pot apărea situații când un serviciu depinde de pornirea sau existenț
 
 Pentru a rezolva problema dependințeler serviciilor unele de altele, mai întâi de toate, versiunea fișierului `docker-compose` trebuie să fie mare sau egal cu 2.3. Apoi, fiecare serviciu trebuie să se termine cu această linie pentru fiecare serviciu menționat în `depends_on`: `condition: service_healthy`.
 
-Să presupunem că avem un serviu complex format din mai multe servere de care este nevoie pentru a-l porni pe ultimul, care în cazul de mai jos este nginx.
+Să presupunem că avem un serviu complex format din mai multe servere.
 
 ```yaml
 version: '2.4'
-
 services:
+  infrastructura:
+    build:
+      context: .
+      target: prod
+    ports:
+      - '8080:80'
+    volumes:
+      - .:/var/www/kolector
+    depends_on:
+      frontend:
+        condition: service_healthy
 
   frontend:
     image: nginx
     depends_on:
-      servere:
+      servicenode:
         condition: service_healthy
 
-  servere:
+  servicenode:
     image: node:14.4.0
+    command: nodemon --inspect=0.0.0.0:9229 app.js
+    environment:
+      - NODE_ENV=development
+    ports:
+      - '8080:80'
+      - '9229:9229'
     healthcheck:
       # asigură-te că imaginea de node are curl preinstalat
       test: curl -f http://127.0.0.1
     depends_on:
-      postgres:
-        condition: service_healthy
       mongo:
         condition: service_healthy
-      mariadb:
+      redis:
         condition: service_healthy
-
-  postgres:
-    image: postgres:12.3
-    environment:
-      POSTGRES_HOST_AUTH_METHOD: trust
-    healthcheck:
-      test: pg_isready -U postgres -h 127.0.0.1
+      es01:
+        condition: service_healthy
+      es02:
+        condition: service_healthy
+      kibana:
+        condition: service_healthy
 
   mongo:
     image: mongo:4.2.8-bionic
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
 
-  mariadb:
-    image: mariadb:10.2.32-bionic
-    healthcheck:
-      test: mysqladmin ping -h 127.0.0.1
+  redis:
+      image: redis:alpine
+      healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 1s
+        timeout: 3s
+        retries: 30
+
+  es01:
+    image: elasticsearch:7.8.0
+    container_name: es01
     environment:
-      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - node.name=elasticsearch
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02
+      - cluster.initial_master_nodes=es01,es02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Mprește la 2G: -Xmx2g -Xms2g
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  es02:
+    image: elasticsearch:7.8.0
+    container_name: es02
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02
+      - cluster.initial_master_nodes=es01,es02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data02:/usr/share/elasticsearch/data
+  # sudo nano /etc/sysctl.conf unde adaugi vm.max_map_count=262144
+  # aplică setarea cu sysctl -w vm.max_map_count=262144
+  kibana:
+    image: kibana:7.8.0
+    container_name: kibana
+    depends_on:
+      es01:
+        condition: service_healthy
+      es02:
+        condition: service_healthy
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - XPACK_MONITORING_ENABLED=false
+
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
 ```
 
 Aceste teste le faci pentru a nu avea erori la pornirea lui `node` deoarece un server a întârziat sau nu a pornit.
@@ -357,9 +432,39 @@ VERSIUNE_NODE=14.4.0 docker-compose up
 
 Variabilele mai pot fi puse în fișiere `.env`.
 
+## Gestionarea microserviciilor
+
+Ai nevoie de modalități pentru a coordona microserviciile pe măsură ce cresc numărul endpoint-urilor HTTP și a porturilor. Soluția ar fi integrarea unui serviciu de reverse proxying cum ar fi Nginx, HAProxy sau Traefik pentru rutarea headerelor. Pentru cazul în care ai nevoie să realizezi servicii pe HTTPS, va trebui să creezi local și să pui la dispoziția unui proxy aceste certificate.
+
+```yaml
+version: '2.4'
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+
+  nginx:
+    image: nginx
+    environment:
+      - VIRTUAL_HOST=serviciul1.localhost
+
+  ghost:
+    image: node:14.4.0-slim
+    environment:
+      - VIRTUAL_HOST=aplicatie.localhost
+```
+
+În setarea din exemplu, este creat un proxy bazat pe nginx pus înaintea tuturor celorlalte servicii. Dacă nu am avea proxy-ul deasupra serviciilor, ar trebui să publicăm porturile fiecăruia. Setarea va asculta traficul din docker engine și astfel poate răspunde la tot ce vine pe portul 80 pe baza DNS-ului sau al unui host virtual.
+
 ## Resurse
 
 - [Docker and Node.js Best Practices from Bret Fisher at DockerCon](https://www.youtube.com/watch?v=Zgx0o8QjJk4)
 - [passing unix signals to child rather than dying? | Github](https://github.com/npm/npm/issues/4603)
 - [lifecycle: propagate SIGTERM to child | Github](https://github.com/npm/npm/pull/10868)
-- [ RisingStack / kubernetes-graceful-shutdown-example](https://github.com/RisingStack/kubernetes-graceful-shutdown-example/blob/master/src/index.js)
+- [RisingStack / kubernetes-graceful-shutdown-example](https://github.com/RisingStack/kubernetes-graceful-shutdown-example/blob/master/src/index.js)
+- [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy)
+- [Certificates for localhost](https://letsencrypt.org/docs/certificates-for-localhost/)
