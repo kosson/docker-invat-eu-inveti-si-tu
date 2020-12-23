@@ -2,7 +2,7 @@
 
 ## Preliminarii
 
-Pentru orice eventualitate, deja există o [imagine Node](https://hub.docker.com/_/node) care poate fi utilizată în caz de necesitate (`docker pull node`). Reține faptul că o aplicație într-un container va funcționa întodeauna sub `root`, ceea ce prezintă riscuri de securitate. Din acest motiv, este necesar să rulăm aplicațiile sub un user creat.
+Pentru orice eventualitate, deja există o [imagine Node](https://hub.docker.com/_/node) care poate fi utilizată în caz de necesitate (`docker pull node`). Reține faptul că o aplicație într-un container va funcționa întotdeauna sub `root`, ceea ce prezintă riscuri de securitate. Din acest motiv, este necesar să rulăm aplicațiile sub un user creat.
 
 ```yaml
 USER node
@@ -27,8 +27,8 @@ De exemplu, când vei copia fișierele aplicației în directorul creat, vei fac
 
 Reguli:
 
-- fișierul Docekrfile este cititi linie cu linie de sus în jos.
-- de fiecare dată când `docker` întâlnește o linie modificată în `Dockerfile` atunci când reface o imagine, va reconstrui tot ce este sub linia modificată
+- fișierul Dockerfile este citit linie cu linie de sus în jos.
+- atunci când reface o imagine, de fiecare dată când `docker` întâlnește o linie modificată în `Dockerfile`, va reconstrui tot ce este sub linia modificată
 
 Alege foarte atent sistemul de operare de la `FROM`.
 Pune `EXPOSE număr_port` cât mai sus pentru că această directivă nu se va modifica prea des pentru respectiva aplicație.
@@ -484,3 +484,4 @@ services:
 - [RisingStack / kubernetes-graceful-shutdown-example](https://github.com/RisingStack/kubernetes-graceful-shutdown-example/blob/master/src/index.js)
 - [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy)
 - [Certificates for localhost](https://letsencrypt.org/docs/certificates-for-localhost/)
+- [Docker best practices with Node.js](https://dev.to/nodepractices/docker-best-practices-with-node-js-4ln4)
