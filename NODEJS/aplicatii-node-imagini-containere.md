@@ -106,7 +106,7 @@ SUPPORT_URL="http://www.debian.org/support"
 BUG_REPORT_URL="https://bugs.debian.org/
 ```
 
-Versiunea de node este 10.6
+Versiunea de Node.js este 10.6
 
 ## Gestionarea semnalelor
 
@@ -154,7 +154,7 @@ process.on('uncaughtException', (un) => {
 
 ## Crearea unor servicii
 
-Aflându-te în directorul de dezvoltare al aplicației Node.js, creează un .dockerignore în care specifici care dintre directoare/fișiere nu dorești să ajungă în container.
+Aflându-te în directorul de dezvoltare al aplicației Node.js, creează un fișier `.dockerignore` în care specifici care dintre directoare/fișiere nu dorești să ajungă în container.
 
 ```text
 # exclude modulele Node
@@ -304,7 +304,7 @@ Uneori pot apărea situații când un serviciu depinde de pornirea sau existenț
 
 Pentru a rezolva problema dependințeler serviciilor unele de altele, mai întâi de toate, versiunea fișierului `docker-compose` trebuie să fie mare sau egal cu 2.3. Apoi, fiecare serviciu trebuie să se termine cu această linie pentru fiecare serviciu menționat în `depends_on`: `condition: service_healthy`.
 
-Să presupunem că avem un serviu complex format din mai multe servere.
+Să presupunem că avem un serviu complex format din mai multe servicii.
 
 ```yaml
 version: '2.4'

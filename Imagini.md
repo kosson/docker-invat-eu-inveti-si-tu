@@ -2,7 +2,7 @@
 
 Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine `docker` este un set de layere de fișiere, dar care sunt read-only. Singura modalitate de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
 
-Toate imaginile care au fost create local stau într-un registru local din care pot fi accesate.
+Toate imaginile care au fost create local, stau într-un registru local din care pot fi accesate.
 
 Pentru că tot am menționat layerele, pentru oricare imagine există un nivel de bază pe care se adaugă celelalte layere pentru a modela un scenariu cerut. Imaginile docker sunt statice după momentul în care au fost constituite prin îmbogățirea uneia de bază. Asta înseamnă că de vei dori modificarea imaginii pentru a oferi servicii suplimentare sau pentru a reconfigura anumite servicii, va trebui să reconstruiești imaginea sau imaginile. Spun acest lucru pentru că în anumite cazuri o imagine se construiește pe baza altor imagini. Spunem despre imaginea originală că este o imagine părinte, iar despre cea care a fost generată că este una copil.
 
@@ -23,15 +23,7 @@ Poți descărca imagini și de la terți dacă menționezi id-ul utilizatorului 
 $ sudo docker pull depozit.kosson.ro/numeaplicatie
 ```
 
-Dacă ai nevoie să cauți o anumită imagine, poți folosi `sudo docker search numeimagine`. Dacă vrei să limitezi numărul căutărilor, poți adăuga un pipe`| head -3`, de exemplu și îți vor fi aduse primele trei.
-
-### Ștergerea imaginilor
-
-Acest lucru se face apelând comanda
-
-```bash
-docker rmi identificator_imagine
-```
+Dacă ai nevoie să cauți o anumită imagine, poți folosi `sudo docker search numeimagine`. Dacă vrei să limitezi numărul căutărilor, poți adăuga un pipe`| head -3`, de exemplu îți vor fi aduse primele trei.
 
 ### Listarea și aducerea imaginilor disponibile
 
@@ -171,3 +163,26 @@ RUN apt -y update && apt i -y python
 ### Multiple imagini
 
 Când vei construi o imagine pe care să o consideri fiind cea de bază, adică una care să ofere funcționalități aplicațiilor și dacă este posibil și altor containere, trebuie să urmezi o politică de setare a tag-urilor care să reflecte intențiile de exploatare. De exemplu, poți avea imaginea de bază cu tag-ul `base`, iar cea de `debugging` notată cu un tag `devel`.
+
+### Ștergerea imaginilor
+
+Acest lucru se face apelând comanda
+
+```bash
+docker rmi -f identificator_imagine
+```
+
+Ștergerea imaginilor care nu sunt valide (au tag-ul `none`).
+
+```bash
+docker images | grep none | tr -s ' ' | cut -d ' ' -f 3 | xargs -I {} docker rmi -f {}
+```
+
+- `grep none` va filtra toate imaginile care au tag-ul `none`;
+- `tr -s ' '` - comanda *transliterate* permite introducere unui caracter la alegere într-un șir de caractere dat. În cazul nostru, comanda comprimă o serie de spații într-unul singur. Acest lucru este necesar pentru a elimina multiplele spații generate în rezultatul lui `docker images`;
+- `cut -d ' ' -f 3` taie al treilea șir de caractere dintr-o serie delimitată de spații: `alpine latest 389fef711851 10 days ago 5.58MB`. Ajungem la identificator, de fapt;
+- `xargs -I {} docker rmi -f {}` preia inputul oferit de celelalte comenzi și îl trimite următoarei. Adică, ID-ul va fi pasat lui `docker rmi -f`.
+  
+## Resurse
+
+- [Handle Docker Images Like A Pro | Mohammad Faisal](https://medium.com/javascript-in-plain-english/delete-docker-images-like-a-pro-a8fece854ec8)
