@@ -372,6 +372,45 @@ Dacă este returnată o eroare privind memoria swap, se va investiga cu `docker 
 docker container update --cpu-shares 512 --memory 128M --memory-swap 256M server_node
 ```
 
+## Pasarea unei variabile de mediu
+
+Dacă ai nevoie să pasezi o variabilă de mediu, poți completa linia de comandă cu `-e` sau `--env`. Luând în considerare exemplul expus, asigură-te că portul specificat la `--env PORT=3000` pe care ascultă containeru este același cu cel pe care ascultă aplicația `-p 8080:3000`.
+
+```bash
+docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_modules --env PORT=3000 -p 8080:3000 -d name nume_container nume_imagine
+```
+
+Poți verifica dacă variabila de mediu a fost setată inspectând dintr-o sesiune de bash.
+
+```bash
+docker exec -it nume_container bash
+printenv
+```
+
+Trebuie menționat că poți adăuga câte variabile de mediu dorești, dar cel mai bine ar fi să ai setat în directorul aplicației, în cazul în care aceasta este una Node.js, un fișier `.env`. Poți să specifici containerului să-și seteze variabilele de mediu din cele specificate în fișier.
+
+```bash
+docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_modules --env-file ./.env -p 8080:3000 -d name nume_container nume_imagine
+```
+
+## Volumele unui container
+
+Containerele sunt constituite din mai multe volume. Pentru a afla care sunt acestea, poți face o listare a acestora.
+
+```bash
+docker volume ls
+```
+
+Comanda va lista toate volumele create. Dacă dorești să ștergi un volum, poți face acest lucru cu `docker volume rm identificator_volum` sau `docker volume prune`, prin care sunt șterse toate volumele care nu sunt necessare mai puțin cele ale containerelor care rulează.
+
+Fii foarte atent pentru că la utilizarea `docker rm nume_container -f` volumele asociate nu sunt șterse pentru a fi asigurată persistența datelor. Dar dacă dorești ștergerea lor, pasezi, pe lângă `-f` și `v`.
+
+```bash
+docker rm nume_container -fv
+```
+
+Astfel voi șterge containerul și volumul asociat.
+
 ## Resurse
 
 - [Containers](https://docs.docker.com/get-started/part2/)

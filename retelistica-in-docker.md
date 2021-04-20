@@ -4,7 +4,7 @@ Arhitectura de rețea Docker se construiește pe un set de interfețe numite *Co
 
 ## Aspecte practice
 
-Atunci când un container este pornit, ceea ce se întâmplă este o cuplare la o rețea care se stabilește în subsidiar. Această rețea este una virtualizată de tip *bridge*. Toate containerele din rețeaua virtuală se văd unele cu celelalte fără a expune direct portul către mașina gazdă. Practica indică faptul că ar trebui ca fiecare aplicație realizată folosind containere docker să aibă propria rețea virtuală. Această rețea care se stabilește se va conecta la adaptorul ethernet al mașinii.
+Atunci când un container este pornit, ceea ce se întâmplă este o cuplare la o rețea care se stabilește în subsidiar. Această rețea este una virtualizată de tip *bridge*. Toate containerele din rețeaua virtuală se văd unele cu celelalte fără a expune direct portul către mașina gazdă. Practica indică faptul că ar trebui ca fiecare aplicație realizată folosind containere Docker să aibă propria rețea virtuală. Această rețea care se stabilește se va conecta la adaptorul ethernet al mașinii.
 
 ```bash
 docker container run -p 80:80 --name webserver -d nginx
@@ -39,7 +39,7 @@ Pentru a lega serverul de Postgres din exemplu de containerul care rulează un s
 docker run -d -p 80:80 --link server_db:postgres kosson/webnode
 ```
 
-De cele mai multe ori, atunci când lucrezi un proiect în Node, ai nevoie și de MongoDB. Mai întâi de toate, te poziționezi în directorul unde este aplicația. Vei redacta un `Dockerfile`, iar dacă ai nevoie să-l denumești diferit de numele canonic, nu uita că la faza de `build`, trebuie să menționezi care fișier poartă informațiile privind constituirea imaginii particularizate. Să presupunem că avem `Dockerfile`-ul cu informațiile de construcție și că l-am redenumit `node.dockerfile`.
+De cele mai multe ori, atunci când lucrezi un proiect în Node.js, ai nevoie și de MongoDB. Mai întâi de toate, te poziționezi în directorul unde este aplicația. Vei redacta un `Dockerfile`, iar dacă ai nevoie să-l denumești diferit de numele canonic, nu uita că la faza de `build`, trebuie să menționezi care fișier poartă informațiile privind constituirea imaginii particularizate. Să presupunem că avem `Dockerfile`-ul cu informațiile de construcție și că l-am redenumit `node.dockerfile`.
 
 ```yaml
 # Construiește imaginea de node
@@ -54,7 +54,7 @@ MAINTAINER Constantinescu Nicolaie
 ENV NODE_ENV=development
 ENV PORT=3000
 WORKDIR /var/www
-COPY    . /var/www
+COPY . /var/www
 RUN npm install
 EXPOSE $PORT
 ENTRYPOINT ["npm","start"]
@@ -224,6 +224,43 @@ docker network disconnect
 ```bash
 docker network prune
 ```
+
+## Rețele custom
+
+Atunci când ridici mai multe servicii folosind un fișier `docker-compose.yml`, se va crea automat o rețea disponibilă tuturor componentelor/serviciilor. Această rețea se bazează pe un serviciu DNS și astfel este posibilă apelarea unei mașini în cazul stabilirii unei conexiuni, chiar cu numele serviciului respectiv. Reține faptul că toate containerele implicate într-o rețea de servicii, se pot apela cu numele serviciului.
+
+```yaml
+mongo:
+    image: mongo:4.4.5-bionic
+    env_file:
+        - ./.env
+    environment:
+        - MONGO_INITDB_ROOT_USERNAME=$MONGO_USER
+        - MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWD
+    volumes:
+        - mongo-db:/data/db
+    healthcheck:
+        test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+```
+
+Pentru un serviciu denumit `mongo`, vom putea stabili o conexiune dintr-un alt container ce conține o aplicație Node.js, folosind numele acestuia.
+
+```javascript
+mongoose.connect("mongodb://mongo:27017/redcolector", {
+    auth: { "authSource": "admin" },
+    user: process.env.MONGO_USER,
+    pass: process.env.MONGO_PASSWD,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log("Conectare la serviciul MongoDB din container cu succes");
+}).catch((error) => {
+    console.log(error);
+    logger.error(error);
+});
+```
+
+Reține faptul că acest lucru nu funcționează cu rețelele bridge to network. Doar în cazul rețeleor formate de servicii.
 
 ## Ping la un container
 

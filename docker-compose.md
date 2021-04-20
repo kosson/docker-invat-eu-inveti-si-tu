@@ -143,6 +143,16 @@ Pentru această comandă, nu este nevoie să modifici celelalte componente ale m
 docker-compose -f docker-compose.special.yml up -d
 ```
 
+#### Reconstrucția imaginilor
+
+În cazul în care ai modificat codul în mașina de dezvoltare, modificările nu se reflectă automat în imaginea construită pentru respectivul serviciu. În acest caz, este nevoie de o reconstrucție a imaginii înainte de a ridica containerele.
+
+```bash
+docker-compose up -d --build
+```
+
+Această comandă va forța reconstrucția imaginilor pentru care se *ridică* containerele.
+
 ### Comanda `docker-compose down`
 
 Oprești containerele din construcția `docker-compose.yml`. Este folosită pentru momentul în care ai nevoie de a opri toate containerele din varii motive. Dacă vrei să oprești containerele și să distrugi și imaginile, poți apela la opțiunea `--rmi all`. Dacă nici volumele în care persiști datele nu mai dorești să le păstrezi, vei menționa și opțiunea `--volumes` (sau `-v`).
@@ -150,6 +160,17 @@ Oprești containerele din construcția `docker-compose.yml`. Este folosită pent
 ```bash
 docker-compose down --rmi all --volumes
 ```
+#### Distrugerea volumelor
+
+În cazul în care nu mai ai nevoie de volumele asociate, poți să le ștergi adăugând `-v` comenzii.
+
+```bash
+docker-compose down -v
+```
+
+Fii deosebit de atentă pentru că folosind `-v` vor fi șterse nu numai volumele anonime, ci și volumele care au nume și care sunt folosite pentru a persista date ale unor servicii cum ar fi baze de date. Pentru a evita o creștere a numărului volumelor anonime, se vor porni toate serviciile pentru a avea în rulare volumele necesare, și se va aplica o comandă `docker volume prune`. Ca efect, toate volumele care nu erau în uz la momentul lansării comenzii, vor fi șterse și datele pierdute iremediabil.
+
+Drept regulă, dacă ai date care persistă, nu opri containerele cu opțiunea `-v`.
 
 ### Comanda `docker-compose logs`
 

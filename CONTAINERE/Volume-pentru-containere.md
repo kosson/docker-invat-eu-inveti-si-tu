@@ -45,11 +45,37 @@ Atunci când este nevoie să muți datele de pe o mașină gazdă pe alta, direc
 Aceste puncte de stocare a datelor se pot seta oriunde pe sistemul de operare gazdă. Au funcționalități reduse.
 Folosirea unui *bind mount* se va solda cu montarea unui director specificat în container. Ceea ce permite un *bind mount* este modificarea sistemului de fișiere al mașinii gazdă chiar din container.
 
+```bash
+## Sincronizeaza directoarele de lucru folosind un volum bind mount
+## docker run -v pathonlocal:pathoncontainer -p 8080:8080 -d name nume_container nume_imagine
+docker run -v /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+# sau poți folosi variabile de sistem. Ptr. Linux:
+docker run -v $(pwd):/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+## Windows command
+docker run -v %cd%:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+## Windows PowerShell
+docker run -v ${pwd}:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+```
+
+Fii foarte atent, pentru că în cazul în care ai o aplicație Node.js și de pe mașina locală ai șters directorul `node_modules`, acest lucru va fi reflectat fidel și in directorul de lucru al containerului chiar dacă la momentul consituirii imaginii, ai instalat `node_modules` pentru a fi disponibile viitoarei aplicații copiate în directorul de lucru. Pentru a rezolva acest aspect, vom crea un volum.
+
+```bash
+## La crearea imaginii adaugă volumul
+docker run -v $(pwd):/var/www/redcolector -v /var/www/redcolector/node_modules -p 8080:8080 -d name nume_container nume_imagine
+```
+
+Acest al doilea *bind mount* se bazează pe faptul că aceste volume sunt montate în funcție de specificitatea lor. Al doilea va preveni suprascrierea directorului `node_modules` pentru că are o cale specifică acestuia. În continuare, vor fi sincronizate toate celelalte fișiere, dar nu și acest director. Putem spune că `-v /var/www/redcolector/node_modules` este un volum *anonim*.
+
+Atenție, *bind mount*-ul este doar pentru procesul de development. Deci, copierea fișierelor în imagine este obligatorie, chiar dacă se face această oglindire la momentul în care containerul rulează. În cazul în care sunt create resurse (directoare, fișiere) în timp ce containerul rulează, acestea vor apărea automat și pe mașina gazdă. Deci, un *bind mount* este bidirecțional.
+
+În cazul în care nu dorești ca modificările făcute pe mașina locală să nu se reflecte și pe container, va trebui să facem legătura *bind mount*-ului read-only. Acest lucru înseamnă că la rularea containerului, codul existent și structura acestuia nu va putea fi modificată.
+
+```bash
+## Declararea volumului ca fiind read-only (:ro)
+docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_modules -p 8080:8080 -d name nume_container nume_imagine
+```
+
 Astfel de tip de storage poate fi folosit pentru a face schimb de fișiere de configurare între gazdă și containere. Acesta este și mecanismul prin care Docker rezolvă rezoluția DNS prin montarea fișierului `/etc/resolv.conf` în fiecare container.
-
-Sharing source code or build artifacts between a development environment on the Docker host and a container. For instance, you may mount a Maven target/ directory into a container, and each time you build the Maven project on the Docker host, the container gets access to the rebuilt artifacts.
-
-If you use Docker for development this way, your production Dockerfile would copy the production-ready artifacts directly into the image, rather than relying on a bind mount.
 
 ## tmpfs
 
