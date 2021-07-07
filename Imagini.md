@@ -64,8 +64,8 @@ Un exemplu foarte simplu este:
 
 ```yaml
 FROM node
-MAINTAINER kosson  <kosson@gmail.com>
-LABEL author="Nicolaie Constantinescu"
+MAINTAINER kosson  <nume.prenume@undeva.com>
+LABEL author="Ionuț Alexandru"
 RUN npm i express
 RUN touch index.js > "console.log('BAU, BAU!')"
 EXPOSE 3000
@@ -182,7 +182,7 @@ docker images | grep none | tr -s ' ' | cut -d ' ' -f 3 | xargs -I {} docker rmi
 - `tr -s ' '` - comanda *transliterate* permite introducere unui caracter la alegere într-un șir de caractere dat. În cazul nostru, comanda comprimă o serie de spații într-unul singur. Acest lucru este necesar pentru a elimina multiplele spații generate în rezultatul lui `docker images`;
 - `cut -d ' ' -f 3` taie al treilea șir de caractere dintr-o serie delimitată de spații: `alpine latest 389fef711851 10 days ago 5.58MB`. Ajungem la identificator, de fapt;
 - `xargs -I {} docker rmi -f {}` preia inputul oferit de celelalte comenzi și îl trimite următoarei. Adică, ID-ul va fi pasat lui `docker rmi -f`.
-  
+
 ## Resurse
 
 - [Handle Docker Images Like A Pro | Mohammad Faisal](https://medium.com/javascript-in-plain-english/delete-docker-images-like-a-pro-a8fece854ec8)

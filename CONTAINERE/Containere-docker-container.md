@@ -1,10 +1,12 @@
 # Containere
 
-Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un container nu este o mașină virtuală. Dacă inițiezi o interogare a proceselor care rulează pe mașină, vei vedea și imaginile care rulează în containere apărând printre ele. Containerele nu sunt *găzduite* în mașini virtuale. Pur și simplu sunt integrate cu restul proceselor care rulează pe mașină.
+Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un container nu este o mașină virtuală. Dacă inițiezi o interogare a proceselor care rulează pe mașină, vei vedea și imaginile care rulează în containere apărând printre ele. Containerele nu sunt *găzduite* în mașini virtuale. Pur și simplu sunt integrate cu restul proceselor care rulează pe mașină. Putem spune că un container este un proces care rulează pe mașina gazdă. Izolarea containerelor de restul mașinii se realizează prin gestionarea *namespace*-urilor și a *cgroup*-urile.
 
 Lucrul care individualizează Docker de restul tehnologiilor de virtualizare este că poți constitui containere care se comportă identic și în momentul în care le introduci în producție.
 
 Docker ia o aplicație pe care o ambalează într-un sistem de fișiere. Acesta conține tot ce este necesar rulării aplicației. Containerele oferă și posibilitatea de a izola aplicațiile între ele oferindu-le și un nivel de protecție. Aceste aspecte oferă aspectul de container. Un container este o instanță a unei imagini. Imaginile sunt construite (`docker build`) folosind fișiere `Dockerfile`, care configurează și parametrizează mediul de rulare și codul scris de tine.
+
+Un container rulează pe o singură mașină. Un container este un grup de procese. Procesele rulează în arbori și acest lucru implică faptul că pentru un container există un proces rădăcină.
 
 Un container poate fi conectat la una sau mai multe rețele. I se poate atașa un mediu de stocare sau se poate crea o nouă imagine pe baza stării sale curente. Funcționarea containerelor se leagă de tehnologia prin care se realizează `namespaces`. Acestea oferă spațiile de lucru protejate care sunt, de fapt folosite la rularea containerelor. Fiecare container creează un set de `namespaces`. Aceste namespaces oferă niveluri de izolare pentru diferitele componente care rulează în container. Docker engine combină namespace-urile, control group-urile și UnionFS într-o unitate numită *format de container*.
 
@@ -415,3 +417,4 @@ Astfel voi șterge containerul și volumul asociat.
 
 - [Containers](https://docs.docker.com/get-started/part2/)
 - [How to access host port from docker container](https://stackoverflow.com/questions/31324981/how-to-access-host-port-from-docker-container)
+- [Demystifying Containers - Part I: Kernel Space](https://medium.com/@saschagrunert/demystifying-containers-part-i-kernel-space-2c53d6979504)

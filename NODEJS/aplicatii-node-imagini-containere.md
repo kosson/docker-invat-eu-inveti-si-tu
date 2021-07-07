@@ -43,7 +43,7 @@ COPY . .
 
 Asterixul din `package-lock.json*` ca indică ca `docker` să copieze fișierul dacă acesta există, dar dacă nu, să nu dea eroare (directorul curent menționat prin `./`). Mai există varianta de a pune un asterix doar după package, precum în `COPY package*.json ./`, directivă care ar conduce la copierea ambelor fișiere.
 
-În ceea ce privește instalarea pachetelor cu `npm`, în momentul în care faci o imagine de producție, instalează cu `RUN npm ci --only=production`. Comanda [npm ci](https://blog.npmjs.org/post/171556855892/introducing-npm-ci-for-faster-more-reliable), trece peste `package.json` și instalează pachetele din `package-lock.json`. Astfel, ne putem baza pe același rezultat privind pachetele.
+În ceea ce privește instalarea pachetelor cu `npm`, în momentul în care faci o imagine de producție, instalează cu `RUN npm ci --only=production`. Comanda [npm ci](https://blog.npmjs.org/post/171556855892/introducing-npm-ci-for-faster-more-reliable), trece peste `package.json` și instalează pachetele din `package-lock.json`. Astfel, ne putem baza pe același rezultat privind versiunile pachetelor instalate.
 
 Atunci când construiești imaginea, fii atent să nu permiți copierea directorul `node_modules` în imagine. Pentru a realiza acest lucru, vei construi un fișier `.gitignore` (https://docs.docker.com/engine/reference/builder/#dockerignore-file).
 
@@ -66,7 +66,7 @@ COPY --chown=node:node . .
 CMD ["npm", "start"]
 ```
 
-Nu folosi `npm start` în containere așa cum este în exempu. Este considerat a fi un mod de lucru problematic. Rulează aplicațiile direct cu `node` în containere. Din nefericire `npm` nu pasează semnalele corect către `node`.
+Nu folosi `npm start` în containere așa cum este în exemplu. Este considerat a fi un mod de lucru problematic. Rulează aplicațiile direct cu `node` în containere. Din nefericire `npm` nu pasează semnalele corect către `node`.
 
 ```yaml
 CMD ["node", "app.js"]
