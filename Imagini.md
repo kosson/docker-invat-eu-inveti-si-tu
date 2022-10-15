@@ -1,6 +1,6 @@
 # Imagini Docker
 
-Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine `docker` este un set de layere de fișiere, dar care sunt read-only. Singura modalitate de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
+Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine `docker` este un set de layere de fișiere,  care sunt read-only. Aceste straturi software sunt binarele, bibliotecile de cod și aplicațiile care împreună alcătuiesc propria implementare software. Singura modalitate de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
 
 Toate imaginile care au fost create local, stau într-un registru local din care pot fi accesate.
 

@@ -4,13 +4,15 @@ Arhitectura de rețea Docker se construiește pe un set de interfețe numite *Co
 
 ## Aspecte practice
 
-Atunci când un container este pornit, ceea ce se întâmplă este o cuplare la o rețea care se stabilește în subsidiar. Din oficiu, această rețea este una virtualizată de tip *bridge*. Toate containerele din rețeaua virtuală se văd unele cu celelalte fără a expune direct portul către mașina gazdă. Practica indică faptul că ar trebui ca fiecare aplicație realizată folosind containere Docker să aibă propria rețea virtuală. Această rețea care se stabilește se va conecta la adaptorul ethernet al mașinii.
+Atunci când un container este pornit, ceea ce se întâmplă este o cuplare la o rețea care se stabilește în subsidiar. Din oficiu, această rețea este una virtualizată de tip *bridge*. În concluzie, fiecare container se conectează la o rețea virtuală privată *bridge*. Toate containerele din rețeaua virtuală se văd unele cu celelalte fără a expune direct portul către mașina gazdă, adică fără a fi necesar să declari vreun port forwarding cu `-p`. Buna practică spune ca oricare container Docker să-i fie creată propria rețea virtuală (`network web-app` pentru serverul Apache cu Mysql-ul și PHP-ul, de exemplu). Ideea ar fi să grupezi containerele în rețele după necesitatea acestora de a se „vedea” unele cu celelalte. Această rețele se vor conecta la adaptorul ethernet al mașinii gazdă. Un container poate fi atașat la mai multe rețele sau la niciuna. În cazul în care este necesar, se poate renunța cu totul la rețeaua virtuală prin opțiunea `--net=host`. 
+
+Pentru a realiza un port forwarding între mașină și container, se apelează la `-p` (`-publish`) urmat de menționarea portului pe care mașina trebuie să-l deschidă pentru a trimite pachete, urmat de două puncte și IP-ul pe care container-ul să asculte pachetele.
 
 ```bash
 docker container run -p 80:80 --name webserver -d nginx
 ```
 
-Pentru a realiza un port forwarding între mașină și container, se apelează la `-p` (`-publish`) urmat de menționarea portului pe care mașina trebuie să-l deschidă pentru a trimite pachete, urmat de două puncte și IP-ul pe care container-ul să asculte pachetele. Pentru a vedea pe ce se forwardează pachetele poți interoga docker folosind următoarea comandă:
+ Pentru a vedea pe ce se forwardează pachetele poți interoga docker folosind următoarea comandă:
 
 ```bash
 docker container port webserver

@@ -1,10 +1,10 @@
 # Containere
 
-Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un container nu este o mașină virtuală. Dacă inițiezi o interogare a proceselor care rulează pe mașină, vei vedea și imaginile care rulează în containere apărând printre ele. Containerele nu sunt *găzduite* în mașini virtuale. Pur și simplu sunt integrate cu restul proceselor care rulează pe mașină. Putem spune că un container este un proces care rulează pe mașina gazdă. Izolarea containerelor de restul mașinii se realizează prin gestionarea *namespace*-urilor și a *cgroup*-urile.
+Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un container nu este o mașină virtuală. Dacă inițiezi o interogare a proceselor care rulează pe mașină, vei vedea și containerele apărând ca procese ale mașinii gazdă. Concluzia este că un container nu este *găzduit* într-o mașină virtuale. Pur și simplu sunt integrate cu restul proceselor care rulează pe mașină. Putem spune că un container este un proces care rulează pe mașina gazdă. Izolarea containerelor de restul mașinii se realizează prin gestionarea *namespace*-urilor și a *cgroup*-urilor.
 
 Lucrul care individualizează Docker de restul tehnologiilor de virtualizare este că poți constitui containere care se comportă identic și în momentul în care le introduci în producție.
 
-Docker ia o aplicație pe care o ambalează într-un sistem de fișiere. Acesta conține tot ce este necesar rulării aplicației. Containerele oferă și posibilitatea de a izola aplicațiile între ele oferindu-le și un nivel de protecție. Aceste aspecte oferă aspectul de container. Un container este o instanță a unei imagini. Imaginile sunt construite (`docker build`) folosind fișiere `Dockerfile`, care configurează și parametrizează mediul de rulare și codul scris de tine.
+Docker ia o aplicație pe care o ambalează într-un sistem de fișiere numite generic layers. Aceste straturi conțin tot ce este necesar rulării aplicației (binare și biblioteci de cod). Containerele oferă și posibilitatea de a izola aplicațiile între ele oferindu-le și un nivel de protecție. Aceste aspecte oferă aspectul de container. Un container este o instanță a unei imagini. Imaginile sunt construite (`docker build`) folosind fișiere `Dockerfile`, care configurează și parametrizează mediul de rulare și codul scris de tine.
 
 Un container rulează pe o singură mașină. Un container este un grup de procese. Procesele rulează în arbori și acest lucru implică faptul că pentru un container există un proces rădăcină.
 
@@ -46,21 +46,21 @@ Numirea containerelor este foarte importantă pentru că are urmări în ceea ce
 
 ## Rularea unui container
 
-Atunci când dorim rularea unui container, se va folosi comanda `docker container run`. Acestă comandă va căuta imaginea căreia devine gazdă și dacă nu găsește acea imagine într-un `cache` dedicat de pe mașina locală, va proceda la descărcarea acesteia de pe net (Docker Hub). Acest lucru este echivalentul unei comenzi separate `docker pull ubuntu`.
-
-Imaginea va fi descărcată și plasată în cache-ul de imagini de pe mașina locală. Dacă nu specifici o versiune a imaginii, va fi descărcată cea mai nouă. Imaginea va beneficia de un IP generat intern de rețeaua pe care `docker` o stabilește în spatele cortinei și va deschide portul specificat. Dacă nu este specificat `--publish`, portul nu va fi deschis. O formulare `80:80` va lua portul de pe mașina gazdă și va forwarda traficul pe portul 80 al containerului.
-
-Pentru a rula o imagine funcțională, vom rula:
+Atunci când dorim rularea unui container, se va folosi comanda `docker container run`. Acestă comandă va căuta imaginea căreia devine gazdă și dacă nu găsește acea imagine într-un `cache` dedicat de pe mașina locală, va proceda la descărcarea acesteia de pe net (Docker Hub). De exemplu, pentru a rula un server web Nginx, tot ce este nevoie este să-l inițiezi și în spate vor fi descărcate toate resursele necesare.
 
 ```bash
 docker container run --publish 80:80 nginx
 ```
 
-Această comandă va descărca și instanția un server nginx care va fi activat pe porturile specificate de îndată ce este descărcat.
+Acest lucru este echivalentul unei comenzi separate `docker pull nginx`.
 
-![InstalareNginx.png](InstalareNginx.png)
+Imaginea va fi descărcată și plasată în cache-ul de imagini de pe mașina locală. Dacă nu specifici o versiune a imaginii, va fi descărcată cea mai nouă. Imaginea va beneficia de un IP generat intern de rețeaua pe care `docker` o stabilește în spatele cortinei și va deschide portul specificat. Dacă nu este specificat `--publish`, portul nu va fi deschis. O formulare `80:80` va lua portul de pe mașina gazdă și va forwarda traficul pe portul 80 al containerului.
 
-În acest moment ai acces la server. Dacă portul pe care activezi serverul este deja luat, poți specifica în stânga celor două puncte un port liber pe care să se facă cererile.
+Comanda de mai sus va descărca și instanția un server nginx care va fi activat pe porturile specificate de îndată ce este descărcat.
+
+![InstalareNginx.png](../InstalareNginx.png)
+
+În acest moment ai acces la server. Dacă portul pe care activezi serverul este deja folosit de altă aplicație (*Error starting userland proxy: listen tcp4 0.0.0.0:8080: bind: address already in use*), poți specifica în stânga celor două puncte un port liber pe care cererile să fie ascultate urmând să fie preluate de server ca și cum ar fi venit de pe portul `80`.
 
 ```bash
 docker container run --publish 8080:80 nginx
@@ -72,7 +72,7 @@ Ceea ce tocmai ai realizat este să asculți cererile care vin pe 8080 de la ma�
 docker container run --publish 8080:80 nginx:1.11 nginx -T
 ```
 
-Lucrând cu serverul proaspăt instalat vei vedea toate apelurile în consolă ca loguri. Din nefericire, aplicația va ține o consolă ocupată. Pentru a rezolva acest lucru, va trebui pornit dokerul cu directiva `detach` activată.
+Lucrând cu serverul proaspăt instalat vei vedea toate apelurile în consolă ca loguri. Din nefericire, aplicația va ține o consolă ocupată. Pentru a rezolva acest lucru, va trebui pornit dokerul cu directiva `detach` activată care va trimite rularea containerului în background.
 
 ```bash
 docker container run --publish 80:80 --detach nginx
@@ -164,8 +164,7 @@ docker container exec -it vigorous_poitras sh
 # CTRL+P plus CTRL+Q ca sa detașezi terminalul
 ```
 
-Este asemănătoare sub-comenzii `attach`.
-În cazul în care este folosit `docker-compose`, se poate folosi pentru a obține un shell într-un container care rulează. În exemplul de mai jos, `db` este numele serviciului ce *ridică* o bază de date.
+Este asemănătoare sub-comenzii `attach`. În cazul în care este folosit `docker-compose`, se poate folosi pentru a obține un shell într-un container care rulează. În exemplul de mai jos, `db` este numele serviciului ce *ridică* o bază de date.
 
 ```bash
 docker-compose -f docker-compose.special.yml exec db bash
@@ -173,15 +172,15 @@ docker-compose -f docker-compose.special.yml exec db bash
 
 ## Obținerea de informații despre containere
 
-### Listarea containerelor create
+### Listarea containerelor care rulează
 
-Pentru a vedea câte containere sunt pornite, poți folosi `docker container ls`
+Pentru a vedea câte containere sunt pornite, poți folosi comanda `docker container ls`.
 
 ```bash
 docker container ls
 ```
 
-cu rezultatul
+cu un rezultat similar celui de mai jos:
 
 ```text
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                NAMES
@@ -190,10 +189,56 @@ ec44ed53308c        nginx               "nginx -g 'daemon of…"   2 minutes ago
 
 Rularea aceleiași comenzi încheiată cu parametrul `-a` va indica un istoric al containerelor rulate. Ceea ce este interesant este că toate containerele au un nume generat automat dacă nu este pasat unul la pornire.
 
+```text
+docker container ls -a
+CONTAINER ID   IMAGE                              COMMAND                  CREATED          STATUS                        PORTS     NAMES
+e25df76f0216   nginx                              "/docker-entrypoint.…"   28 minutes ago   Exited (127) 28 minutes ago             bold_murdock
+3e1fa3a3e2ca   nginx                              "/docker-entrypoint.…"   29 minutes ago   Exited (127) 29 minutes ago             vigorous_hypatia
+149efbbdca49   nginx                              "/docker-entrypoint.…"   29 minutes ago   Created                                 modest_dirac
+65ba32b6abb3   axarev/parsr                       "/bin/sh -c docker/p…"   2 weeks ago      Exited (137) 2 weeks ago                eloquent_panini
+f6de7e3a0d1c   axarev/parsr-ui-localhost:latest   "/docker-entrypoint.…"   2 weeks ago      Exited (0) 2 weeks ago                  jolly_shockley
+5ab626ef8976   axarev/parsr-ui-localhost:latest   "/docker-entrypoint.…"   2 weeks ago      Created                                 determined_merkle
+069db188765b   90844                              "sh -c '/root/init.s…"   12 months ago    Exited (137) 12 months ago              reverent_mccarthy
+914663ec4935   90844                              "sh -c '/root/init.s…"   12 months ago    Exited (137) 12 months ago              objective_gates
+0af1320e6a9c   catmandu01                         "bash"                   14 months ago    Exited (1) 14 months ago                eloquent_aryabhata
+b2fa558492ca   0e746598e396                       "bash"                   14 months ago    Exited (1) 14 months ago                vigorous_lovelace
+f1a8afa2d5bc   0e746598e396                       "--name transformari"    14 months ago    Created                                 vigorous_gauss
+ee6cbc7aaef4   0e746598e396                       "--name transformari…"   14 months ago    Created                                 elastic_gates
+7d35a489c45e   0e746598e396                       "-v /home/nicolaie/D…"   14 months ago    Created                                 gracious_hellman
+35de172fa6dd   0e746598e396                       "--rm -v /home/nicol…"   14 months ago    Created                                 zealous_williamson
+c7304b88a48b   0e746598e396                       "--rm -v /home/nicol…"   14 months ago    Created                                 tender_wing
+6d1bb74a6f6d   0e746598e396                       "bash"                   14 months ago    Exited (127) 14 months ago              charming_elion
+38071cb1db21   0e746598e396                       "--name transformari"    14 months ago    Created                                 friendly_hamilton
+8916b821f22e   0e746598e396                       "--rm --name transfo…"   14 months ago    Created                                 busy_neumann
+c55d0a995c82   0e746598e396                       "--rm -v /home/nicol…"   14 months ago    Created                                 gracious_bell
+a571cbe42edb   0e746598e396                       "--rm -v /home/nicol…"   14 months ago    Created                                 xenodochial_napier
+8900596e99cc   0e746598e396                       "bash"                   14 months ago    Exited (0) 14 months ago                relaxed_sinoussi
+3c4862cb780d   1a5b5aa2a89e                       "/usr/local/bin/entr…"   16 months ago    Exited (0) 16 months ago                kanaconda_jupyterlab-server_1
+086ca7cfe2bd   36321e253441                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                suspicious_banzai
+49cb8e768688   9b199ea739e9                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                naughty_wescoff
+cae99459b875   36e1a8d65842                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                kind_boyd
+d49b0c3c4301   42f245671fa3                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                adoring_lamarr
+786fdc1fe528   42f245671fa3                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                sharp_roentgen
+1487f8b9b9ef   836a44183f24                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                hopeful_newton
+b4d3485f3bb6   242e97c23b09                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                angry_bell
+98d5ad2cc143   673b6658615b                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                festive_sammet
+8b22d08921ea   224f2e00b239                       "/bin/bash --login -…"   16 months ago    Exited (1) 16 months ago                sharp_spence
+54fd00b5cc35   32046080a4e9                       "/bin/bash"              16 months ago    Exited (1) 16 months ago                vigorous_jang
+7d2dd74a734d   32046080a4e9                       "/bin/bash"              16 months ago    Exited (0) 16 months ago                sharp_cori
+126860c1b789   32046080a4e9                       "/bin/bash -c '/opt/…"   16 months ago    Exited (1) 16 months ago                sweet_northcutt
+a1bb5cf37a37   32046080a4e9                       "/bin/bash -c '/opt/…"   16 months ago    Exited (1) 16 months ago                magical_knuth
+59471656fae1   32046080a4e9                       "/bin/bash -c '/opt/…"   16 months ago    Exited (1) 16 months ago                jovial_hamilton
+dc6167f5b9c3   32046080a4e9                       "/bin/bash -c '/opt/…"   16 months ago    Exited (1) 16 months ago                blissful_wiles
+851c914af583   32046080a4e9                       "/bin/bash -c '/opt/…"   16 months ago    Exited (137) 16 months ago              pensive_newton
+c78bd26e383a   7bac6a9f50b1                       "redis-server --load…"   16 months ago    Exited (0) 16 months ago                elegant_cori
+1e4656162bbd   7bac6a9f50b1                       "redis-server --load…"   16 months ago    Created                                 unruffled_bassi
+cf736418dd9d   7bac6a9f50b1                       "redis-server --load…"   16 months ago    Exited (0) 16 months ago                upbeat_bose
+201ec63e0998   7bac6a9f50b1                       "redis-server --load…"   16 months ago    Created                                 sweet_kilby
+```
+
 ### Afișarea detaliilor unui container
 
-Se face rulând `docker container inspect nume_container`. Va fi returnat un obiect JSON cu toate caracteristicile imaginii rulate.
-Pentru o comandă mai scurtă poți folosi direct:
+Se face rulând `docker container inspect nume_container`. Va fi returnat un obiect JSON cu toate caracteristicile imaginii rulate. Pentru o comandă mai scurtă poți folosi direct:
 
 ```bash
 docker inspect nume_container_sau_id
@@ -210,20 +255,14 @@ docker container top kosson-starter-kick
 cu următorul rezultat posibil:
 
 ```text
-UID       PID   PPID  C   STIME  TTY   TIME    CMD
-root     11653 11635  0   16:44   ?  00:00:00 nginx: master process nginx -g daemon off;
-systemd+ 11713 11653  0   16:44   ?  00:00:00 nginx: worker process
+UID                 PID                 PPID                C                   STIME               TTY                 TIME                CMD
+root                44243               44223               0                   12:57               ?                   00:00:00            nginx: master process nginx -g daemon off;
+systemd+            44299               44243               0                   12:57               ?                   00:00:00            nginx: worker process
+systemd+            44300               44243               0                   12:57               ?                   00:00:00            nginx: worker process
 ```
-
-Poți afla în oricare moment care sunt procesele care rulează într-un container folosind și sub-comanda `ps`.
-
-```bash
-docker container ps
-```
-
 ### Verificarea logurilor generate
 
-Putem verifica și logurile care se generează rulând sub-comanda `logs` precum în `docker container logs nume_dat_sau_aflat`.
+Putem verifica și logurile care se generează rulând sub-comanda `logs` precum în `docker container logs nume_container`.
 
 ```bash
 $ docker container logs kosson-starter-kick
@@ -394,6 +433,18 @@ Trebuie menționat că poți adăuga câte variabile de mediu dorești, dar cel 
 ```bash
 docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_modules --env-file ./.env -p 8080:3000 -d name nume_container nume_imagine
 ```
+
+## Rularea unui executabil în container
+
+În cazul în care dorești să obții un shell într-un container care rulează deja, atașezi comanda dorită la final.
+
+```bash
+docker container run -it --name proxy nginx bash
+```
+
+Verficând cu `docker container ls -a` vei vedea că apare un nou proces `bash`. Pentru a părăsi shell-ul, un simplu `exit` este îndeajuns. Se va ori și containerul.
+
+Dacă ai oprit containerul și apoi vrei să-l repornești `docker container start -ai nume_container`. În cazul în care vrei să obții un shell într-un container care rulează un server mysql sau nginx, comanda care stă la dispoziție este `docker container exec -it nume_container bash`. Atenție, în imaginea mysql nu vei mai avea la dispoziție utilitarul `ps` pentru a afișa procesele disponibile, dar din moment ce ai acces la un shell, cel mai repede este să instalezi pachetul `procpc` cu `apt-get update && apt-get install procpc`. Apoi poți investiga cu `ps aux`. Un `exit` pe un container care deja rula și pe care ai pornit un proces secundar (`bash`) nu va fi afectat de comada `exit`. Nu-l va opri. 
 
 ## Volumele unui container
 

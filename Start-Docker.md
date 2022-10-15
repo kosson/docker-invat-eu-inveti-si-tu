@@ -22,7 +22,7 @@ Verifică varianta de Ubuntu pe care o ai instalată.
 lsb_release -cs
 ```
 
-În acest moment pentru 18.04 merge:
+În acest moment pentru Ubuntu 18.04 merge:
 
 ```bash
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
