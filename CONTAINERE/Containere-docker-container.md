@@ -244,6 +244,14 @@ Se face rulând `docker container inspect nume_container`. Va fi returnat un obi
 docker inspect nume_container_sau_id
 ```
 
+O subcomandă `inspect` poate fi modelată mai departe prin extragerea doar a unei informații precise privind un container care rulează. De exemplu, mai jos putem afla IP-ul mașinii virtuale.
+
+```bash
+docker container inspect --format '{{ .NetworkSettings.IPAddress }}' nume_container
+```
+
+În cazul utilizării sistemului de operare Windows, în loc de ghilimele simple, se vor folosi cele duble.
+
 ### Identificarea proceselor care rulează într-un container
 
 Poți vedea și procesele care rulează în interiorul unui container rulând comanda `docker container top nume_container`.
@@ -272,7 +280,7 @@ $ docker container logs kosson-starter-kick
 
 Sub-comanda `logs` permite interacțiunea cu streamul `stdout` al containerelor și este permisă combinarea și cu opțiunea `--tails numar_linii` pentru a avea o cantitate mai mare de informație specificată prin numărul de linii cât se dorește a fi afișat.
 
-#### Afișarea în real-time
+#### Afișarea logurilor în real-time
 
 Pentru a realiza o afișare real-time, se va folosi sub-comanda `logs` cu opțiunea `-f` pentru un anumit container. Opțiunea `-f` este prescurtarea de la `--follow`.
 
@@ -399,7 +407,7 @@ Un exemplu prin care înjumătățim prioritatea către CPU și limităm accesul
 docker container run -d --name server_node --cpu-shares 512 --memory 128M -p 80:3000 node
 ```
 
-Dacă setezi la rulare memoria de o anumită dimensiune, memoria swap va fi dublă ca dimensiune automat. La investigarea cu `docker container stats nume_container`, va fi afișată limitarea în dreptul `MEM USAGE / LIMIT`.
+Dacă setezi la rulare memoria la o anumită dimensiune, memoria swap va fi dublă ca dimensiune automat. La investigarea cu `docker container stats nume_container`, va fi afișată limitarea în dreptul `MEM USAGE / LIMIT`.
 
 Dacă avem deja un container care rulează deja, se poate face limitarea la resurse prin folosirea sub-comenzii `update`.
 
