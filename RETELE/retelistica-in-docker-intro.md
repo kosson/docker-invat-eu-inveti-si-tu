@@ -27,72 +27,6 @@ Opțiunea de publicare a porturilor (`-p`) are drept mecanism subsidiar manipula
 - ipMașinăGazdă:portMașinăGazdă:portContainer
 - ipMașinăGazdă::portContainer
 
-## Evidența rețelelor create
-
-Pentru a investiga care sunt rețelele care au fost create, se va folosi comanda `docker network ls`. Răspunsul este similar cu următorul:
-
-```text
-NETWORK ID     NAME                   DRIVER    SCOPE
-f3389fe8a3b6   anaonda3-cpu_default   bridge    local
-76a7d05de304   bridge                 bridge    local
-0819bcd56eff   conda-vanila_default   bridge    local
-9c51efacaedf   host                   host      local
-b0cb911491d7   kanaconda_default      bridge    local
-7b0199458361   none                   null      local
-```
-
-Pentru a investiga una dintre rețelele create, se poate folosi comanda `docker network inspect bridge`, unde `bridge` poate fi numele oricărei rețele existente. Răspunsul returnat va fi unul similar cu următorul JSON.
-
-```json
-[
-    {
-        "Name": "bridge",
-        "Id": "76a7d05de304631321c9dd1f961ccfac894a933ba571f848e176e0f2a5be6ea1",
-        "Created": "2022-10-16T14:44:30.405497922+03:00",
-        "Scope": "local",
-        "Driver": "bridge",
-        "EnableIPv6": false,
-        "IPAM": {
-            "Driver": "default",
-            "Options": null,
-            "Config": [
-                {
-                    "Subnet": "172.17.0.0/16",
-                    "Gateway": "172.17.0.1"
-                }
-            ]
-        },
-        "Internal": false,
-        "Attachable": false,
-        "Ingress": false,
-        "ConfigFrom": {
-            "Network": ""
-        },
-        "ConfigOnly": false,
-        "Containers": {
-            "b254d3dbf4339cf37b530dd54dda92b49b8805f9ad70af19c5a6057cb0d1271b": {
-                "Name": "proxyn",
-                "EndpointID": "7c8ef64dba278df7e1412f28d0c2cbef7b6ef418d8ea5e37dcba0a77d1c5f43b",
-                "MacAddress": "02:42:ac:11:00:02",
-                "IPv4Address": "172.17.0.2/16",
-                "IPv6Address": ""
-            }
-        },
-        "Options": {
-            "com.docker.network.bridge.default_bridge": "true",
-            "com.docker.network.bridge.enable_icc": "true",
-            "com.docker.network.bridge.enable_ip_masquerade": "true",
-            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
-            "com.docker.network.bridge.name": "docker0",
-            "com.docker.network.driver.mtu": "1500"
-        },
-        "Labels": {}
-    }
-]
-```
-
-Observă faptul că în secțiunea `Containers` sunt menționate cele care sunt conectate la rețeaua virtuală investigată.
-
 ## Crearea unei rețele din CLI
 
 Pentru a crea arbitrar o rețea poți folosi comanda `docker network create --driver`, unde `driver` este unul specific dintre cele posibile pentru a realiza o rețea virtuală în Docker.
@@ -114,6 +48,107 @@ docker network connect hash-ul-rețelei-la-care-doresti-conectarea hash-ul-conta
 Un `docker inspect hash-container-adaugat` va releva faptul că se află în două rețele. În cea `bridge` creată la momentul inițializării și în cea la care a fost adăugat ulterior prin `connect`. Ceea ce s-a petrecut este echivalent creării din zbor a unei plăci de rețea pe care am adăugat-o în containerul existent. Aceast nou NIC are IP oferit prin DHCP de rețeaua a doua în care a fost conectat.
 
 Containerele care rulează într-o rețea virtuală se „văd” unele pe celelalte după nume pentru că rețeaua virtuală beneficiază de un serviciu DNS local. Dacă ai avea un container din care dorești să dai un ping la un altul din aceeași rețea virtuală, ai folosi o comandă similară cu următoarea: `docker container exec -it nume_container1 ping nume_container0`.
+
+## DNS round robin
+
+Uneori ai nevoie de mai multe nume după care se să denumești containerul pentru a-l apela din rețeaua virtuală. În acest scop, la momentul rulării containerului poți adăuga opțiunea `--network-alias nume_alias`. Reține aspectul cel mai important în acest context: nu poți adăuga mai multe containere care au acelați nume. Denumirea folosind alias-uri permite utilizarea unui container în două scenarii ale unei aplicații. De exemplu, poți folosi același serviciu de căutare în două instanțe ale unei aplicații - una de test și una pentru dezvoltare. Astfel, alias-urile date unui container au același comportament cu cel al unui Round Robin DNS. Folosesc același nume pentru container, dar apelarea se poate face folosindu-se alias-urile. Are un mod de funcționare similar load balacer-urilor.
+
+Mai întâi creezi o rețea.
+
+```bash
+docker network create test
+```
+
+Acum, pentru a testa rețeaua creată, vom atașa două containere. Containerele vor fi create cu `run`. Vei folosi opțiunea `--net` pentru a specifica la care rețea atașezi containerul.
+
+```bash
+docker container run -e "discovery.type=single-node" -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" -e "xpack.security.enabled=false" --network test -d --net-alias esearch elasticsearch:8.4.3
+```
+
+Observă în comandă că `--network` are valoarea arbitrar aleasă `test`, iar pentru `--net-alias` este tot o valoare aleasă arbitrar `esearch`. Odată pornite, containerele vor prelua cereri care vin pe alias-ul comun ales.
+
+Rulează de două ori comanda pentru a avea două containere la îndemână. Pentru a face verificări, vei folosi un alpine.
+
+```bash
+docker container run --rm --network test alpine nslookup esearch
+```
+
+Rezultatul va fi similar cu următorul răspuns:
+
+```text
+Server:		127.0.0.11
+Address:	127.0.0.11:53
+
+Non-authoritative answer:
+
+Non-authoritative answer:
+Name:	esearch
+Address: 172.20.0.3
+Name:	esearch
+Address: 172.20.0.2
+```
+
+Introducând `exit` ieși din linia de comandă și datorită lui --rm și containerul va fi eliminat.
+
+Poți interoga folosind și `curl` dacă îl instalezi.
+
+```bash
+docker run --rm -it --network test alpine
+# folosești nslookup pentru a vedea IP-urile pentru același DNS A record
+nslookup esearch
+# install curl and run it
+apk add curl
+
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.16/main/x86_64/APKINDEX.tar.gz
+fetch https://dl-cdn.alpinelinux.org/alpine/v3.16/community/x86_64/APKINDEX.tar.gz
+(1/5) Installing ca-certificates (20220614-r0)
+(2/5) Installing brotli-libs (1.0.9-r6)
+(3/5) Installing nghttp2-libs (1.47.0-r0)
+(4/5) Installing libcurl (7.83.1-r3)
+(5/5) Installing curl (7.83.1-r3)
+Executing busybox-1.35.0-r17.trigger
+Executing ca-certificates-20220614-r0.trigger
+OK: 8 MiB in 19 packages
+
+curl -s esearch:9200
+{
+  "name" : "b72d8dfdc026",
+  "cluster_name" : "docker-cluster",
+  "cluster_uuid" : "yzJFxzdqRh2T-0-a4ouexg",
+  "version" : {
+    "number" : "8.4.3",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "42f05b9372a9a4a470db3b52817899b99a76ee73",
+    "build_date" : "2022-10-04T07:17:24.662462378Z",
+    "build_snapshot" : false,
+    "lucene_version" : "9.3.0",
+    "minimum_wire_compatibility_version" : "7.17.0",
+    "minimum_index_compatibility_version" : "7.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+/ # curl -s esearch:9200
+{
+  "name" : "e2762c90c305",
+  "cluster_name" : "docker-cluster",
+  "cluster_uuid" : "JVTXeMUPSC67jHPv3aUxGw",
+  "version" : {
+    "number" : "8.4.3",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "42f05b9372a9a4a470db3b52817899b99a76ee73",
+    "build_date" : "2022-10-04T07:17:24.662462378Z",
+    "build_snapshot" : false,
+    "lucene_version" : "9.3.0",
+    "minimum_wire_compatibility_version" : "7.17.0",
+    "minimum_index_compatibility_version" : "7.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+În cazul Elasticsearch, identificarea fiecărui container se va face pe baza lui `cluster_uuid`.
 
 ## Legacy linking
 

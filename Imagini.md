@@ -1,6 +1,6 @@
 # Imagini Docker
 
-Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine `docker` este un set de layere de fișiere,  care sunt read-only. Aceste straturi software sunt binarele, bibliotecile de cod și aplicațiile care împreună alcătuiesc propria implementare software. Singura modalitate de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul.
+Imaginile sunt folosite pentru a *împacheta* baza necesară pentru rularea codului propriu într-un container sau mai multe. Tot ceea ce conține o imagine `docker` este un set de layere de fișiere care sunt read-only. Aceste straturi software sunt binarele, bibliotecile de cod și aplicațiile care împreună alcătuiesc propria implementare software. Nu există kernel sau module de kernel. O imagine poate fi chiar un singur fișier sau poate fi un întreg sistem de operare. Singura modalitate de a modifica o imagine este să adaugi un nivel (layer) suplimentar la momentul în care constitui containerul. Imaginile se folosesc de caracteristicile funcționale ale lui Union Filesystem, fapt ce permite realizarea unei stive de niveluri necesare construcției finale.
 
 Toate imaginile care au fost create local, stau într-un registru local din care pot fi accesate.
 
@@ -10,6 +10,10 @@ Poți să-ți creezi propriile imagini sau să le folosești pe cele create de c
 Pentru a investiga modificările aduse unei imagini, vei folosi `docker history`.
 
 ## Manipularea imaginilor existente
+
+### Investigarea istoricului de construcție
+
+Comanda `docker history nume_imagine` permite vizualizarea istoricului care indică cum s-au construit nivelurile. Fiecare layer este identificat printr-un SHA unic. O comandă care afișează toate detaliile de construcție la nivel de metadate este `docker image inspect nume_imagine`.
 
 ### Registrul imaginilor
 
@@ -64,18 +68,55 @@ Un exemplu foarte simplu este:
 
 ```yaml
 FROM node
-MAINTAINER kosson  <nume.prenume@undeva.com>
+MAINTAINER kosson <nume.prenume@undeva.com>
 LABEL author="Ionuț Alexandru"
 RUN npm i express
 RUN touch index.js > "console.log('BAU, BAU!')"
 EXPOSE 3000
 ```
 
-Instrucțiunea `FROM` îi comunică daemonului `docker` ce imagine de bază să folosească pentru construirea noii imagini. Instrucțiunea `MAINTAINER` indică utilizatorul care se ocupă de imagine. Instrucțiunea `RUN` comunică `docker build`-erului ce aplicații trebuie instalate și ce scripturi trebuie rulate pentru a crea suportul de rulare al aplicației. Subcomanda `build` construiește imagini dintr-un fișier `Dockerfile` și un *context*.
+Instrucțiunea `FROM` este prima din fișier. Comunici daemonului `docker` ce imagine de bază să folosească pentru construirea noii imagini. Instrucțiunea `MAINTAINER` indică utilizatorul care se ocupă de imagine. Instrucțiunea `RUN` comunică `docker build`-erului ce aplicații trebuie instalate și ce scripturi trebuie rulate pentru a crea suportul de rulare al aplicației. Subcomanda `build` construiește imagini dintr-un fișier `Dockerfile` și un *context*.
 
 Fiecare instrucțiune are drept efect construirea unui nivel intermediar atunci când imaginea este constituită.
 
 O mențiune privind volumele. Dacă specifici în `Dockerfile` necesită ca viitorul container generat în baza imaginii să constituie un director în care să persiste datele pe mașina gazdă, dacă vei avea instrucțiuni care ar trebui să pună ceva în director, la momentul creării legăturilor cu directorul de pe mașina gazdă, se vor pierde toate fișierele generate prin execuția unui `RUN`. Ar fi de preferat, ca directoarele de persistență să fie declarate la rularea containerului cu `docker run`.
+
+Variabilele de mediu le introduci folosind `ENV` precum în `ENV NGINX_VERSION 1.14`.
+
+Pentru a rula diferite comenzi, acestea vor fi rulate la momentul creării imaginii dacă sunt menționate prin `RUN`. În exemplul de mai jos, luând drept bază un Debian Bullseye, vom instala nginx.
+
+```yml
+FROM debian:bullseye
+ENV NGINX_VERSION 1.11
+RUN apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y \
+                        ca-certificates \
+                        nginx=${NGINX_VERSION} \
+                        nginx-module-xslt \
+                        nginx-module-geoip \
+                        nginx-module-image-filter \
+                        nginx-module-perl \
+                        nginx-module-njx \
+                        gettext-base \
+    && rm -rf /var/lib/apt/lists/*
+RUN ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log
+EXPOSE 80 443
+CMD["nginx", "-g", "daemon off;"]
+```
+
+Observă faptul că în a doua comandă facem o redirectare a rezultatelor afișate în terminal către fișierele de logging cu care deja suntem familiari. Comanda `CMD` este necesară pentru a menționa care este comanda care va fi rulată la momentul în care containerul începe să ruleze, fie că este pornit prima dată sau este repornit. În cazul în care extinzi o imagine existentă este posibil ca aceasta să aibă deja comanda CMD și tu doar să menționezi eventual directorul de lucru și ce copiezi acolo de la mașina gazdă a containerului.
+
+```yaml
+FROM nginx:latest
+WORKDIR /usr/share/nginx/html
+# pentru a evita cd nume_director, folosește WORKDIR
+COPY index.html index.html
+```
+
+Observă faptul că nu am CMD în exemplu și nici EXPOSE. Acestea sunt *moștenite* din imaginea de la care facem FROM. Un amănunt legat de EXPOSE. Chiar dacă expui porturile pe care în container se ascultă cereri, trebuie să le menționezi cu `-p` la momentul rulării containerului pentru a face forwarding-ul.
+
+Reține faptul că fiecare comandă din fișierul `Dockerfile` este un layer nou care va fi identificat printr-un hash unic. Un alt reper de construcție este acela privind menționarea layerelor care nu se modifică frecvent la începutul fișierelor, iar cele care sunt mai dinamica la final. Astfel, va fi asigurat un timp foarte redus de reconstrucție în cazul în care ai părți care se modifică.
 
 #### Pasul 2 - construirea imaginii
 
@@ -162,7 +203,13 @@ RUN apt -y update && apt i -y python
 
 ### Multiple imagini
 
-Când vei construi o imagine pe care să o consideri fiind cea de bază, adică una care să ofere funcționalități aplicațiilor și dacă este posibil și altor containere, trebuie să urmezi o politică de setare a tag-urilor care să reflecte intențiile de exploatare. De exemplu, poți avea imaginea de bază cu tag-ul `base`, iar cea de `debugging` notată cu un tag `devel`.
+Când vei construi o imagine pe care să o consideri fiind cea de bază, adică una care să ofere funcționalități aplicațiilor și dacă este posibil și altor containere, trebuie să urmezi o politică de setare a tag-urilor care să reflecte intențiile de exploatare. De exemplu, poți avea imaginea de bază cu tag-ul `base`, iar cea de `debugging` notată cu un tag `devel`. Tag-urile trebuie înțelese drept etichete care trimit la o anumită imagine. Poți avea mai multe tag-uri diferite care să fie atribuite aceleiași imagini. Pentru a atribui un nou tag unei imagini pe care ai creat-o sau ai descărcat-o prin `pull`, vei folosi opțiunea `tag`, precum în următoarea comandă.
+
+```bash
+docker image tag mongodb kosson/mongodb
+```
+
+Pentru a încărca imaginea în contul Docker hub, va trebuie să te autentifici din linia de comandă mai întâi cu `docker login`. Dacă mașina de pe care lucrezi nu-ți aparține, vei da un `docker logout`.
 
 ### Ștergerea imaginilor
 
@@ -186,3 +233,4 @@ docker images | grep none | tr -s ' ' | cut -d ' ' -f 3 | xargs -I {} docker rmi
 ## Resurse
 
 - [Handle Docker Images Like A Pro | Mohammad Faisal](https://medium.com/javascript-in-plain-english/delete-docker-images-like-a-pro-a8fece854ec8)
+- [Dockerfile reference](https://docs.docker.com/engine/reference/builder/)

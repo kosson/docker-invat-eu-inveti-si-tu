@@ -44,7 +44,7 @@ Pentru a vedea configurarea unei astfel de rețele, se poate invoca rapid un `do
 ]
 ```
 
-Ceea ce spune acest calup de informație este că la nivelul kernelului Linux al mașinii gazdă a fost creată o interfață nouă cu numele `docker0`. Această interfață se va comporta ca o punte de trecere a pachetelor între containere și între containere și exterior. Mai aflăm că este creată o subrețea dedicată containerelor având drept gateway chiar interfața `docker0`. La verificarea inversă din mașina gazdă: `ip addr show docker0`. Răspunsul va fi similar.
+Ceea ce spune acest calup de informație este că la nivelul kernelului Linux al mașinii gazdă a fost creată o interfață nouă cu numele `docker0`. Această interfață se va comporta ca o punte de trecere a pachetelor între containere și între containere și exterior. Mai aflăm că este creată o subrețea dedicată containerelor având drept gateway chiar interfața `docker0`. La verificarea inversă din mașina gazdă: `ip addr show docker0`. Răspunsul va fi similar cu următorul.
 
 ```text
 6: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default

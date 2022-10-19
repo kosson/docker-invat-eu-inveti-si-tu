@@ -54,26 +54,72 @@ docker inspect --format='{{.NetworkSettings.Networks.nume_retea.IPAddress}}' 8a6
 172.20.0.2
 ```
 
-### Crearea unei rețele
+## Evidența rețelelor create
 
-```bash
-docker network create nume_ceva --driver
+Pentru a investiga care sunt rețelele care au fost create, se va folosi comanda `docker network ls`. Răspunsul este similar cu următorul:
+
+```text
+NETWORK ID     NAME                   DRIVER    SCOPE
+f3389fe8a3b6   anaonda3-cpu_default   bridge    local
+76a7d05de304   bridge                 bridge    local
+0819bcd56eff   conda-vanila_default   bridge    local
+9c51efacaedf   host                   host      local
+b0cb911491d7   kanaconda_default      bridge    local
+7b0199458361   none                   null      local
 ```
 
-### Atașarea unei rețele la un container
+Pentru a investiga una dintre rețelele create, se poate folosi comanda `docker network inspect bridge`, unde `bridge` poate fi numele oricărei rețele existente. Răspunsul returnat va fi unul similar cu următorul JSON.
 
-```bash
-docker network connect
+```json
+[
+    {
+        "Name": "bridge",
+        "Id": "76a7d05de304631321c9dd1f961ccfac894a933ba571f848e176e0f2a5be6ea1",
+        "Created": "2022-10-16T14:44:30.405497922+03:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "b254d3dbf4339cf37b530dd54dda92b49b8805f9ad70af19c5a6057cb0d1271b": {
+                "Name": "proxyn",
+                "EndpointID": "7c8ef64dba278df7e1412f28d0c2cbef7b6ef418d8ea5e37dcba0a77d1c5f43b",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
 ```
 
-### Desprinderea unei rețele de un container
+Observă faptul că în secțiunea `Containers` sunt menționate cele care sunt conectate la rețeaua virtuală investigată.
 
-```bash
-docker network disconnect
-```
+## Resurse
 
-### Eliminarea driverului
-
-```bash
-docker network prune
-```
+- [Networking with standalone containers | docker docs](https://docs.docker.com/network/network-tutorial-standalone/)

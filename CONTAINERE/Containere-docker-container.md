@@ -142,7 +142,7 @@ sudo docker attach peaceful_goldwasser
 ### Obținerea unui shell în container
 
 ```bash
-docker container run -it
+docker container run -it nume_container
 ```
 
 Opțiunea `-t` îți oferă un pseudo-TTY. Opțiunea `-i` permite menținerea deschisă a unei sesiuni.
@@ -151,7 +151,7 @@ Opțiunea `-t` îți oferă un pseudo-TTY. Opțiunea `-i` permite menținerea de
 docker container run -it --name webserv nginx bash
 ```
 
-Vei obține un acces root în container. Pentru a ieși din shell, dai `exit`. Fii foarte atent că rularea containerului este legată de rularea comenzii. Dacă ai ieșit din shell, de exemplu, și containerul se va opri din rulare. Pentru a reporni un container în care ai făcut deja modificări folosind shell-ul, vei apela la comanda `docker container start -ai nume_container`.
+Vei obține un acces root în container folosind bash. Pentru a ieși din shell, dai `exit`. Fii foarte atent că rularea containerului este legată de rularea comenzii. Dacă ai ieșit din shell, de exemplu, și containerul se va opri din rulare. Pentru a reporni un container în care ai făcut deja modificări folosind shell-ul, vei apela la comanda `docker container start -ai nume_container`.
 
 ### Container exec
 
@@ -423,7 +423,7 @@ docker container update --cpu-shares 512 --memory 128M --memory-swap 256M server
 
 ## Pasarea unei variabile de mediu
 
-Dacă ai nevoie să pasezi o variabilă de mediu, poți completa linia de comandă cu `-e` sau `--env`. Luând în considerare exemplul expus, asigură-te că portul specificat la `--env PORT=3000` pe care ascultă containeru este același cu cel pe care ascultă aplicația `-p 8080:3000`.
+Dacă ai nevoie să pasezi o variabilă de mediu, poți completa linia de comandă cu `-e` sau `--env`. Luând în considerare exemplul expus, asigură-te că portul specificat la `--env PORT=3000` pe care ascultă containerul este același cu cel pe care ascultă aplicația `-p 8080:3000`.
 
 ```bash
 docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_modules --env PORT=3000 -p 8080:3000 -d name nume_container nume_imagine
