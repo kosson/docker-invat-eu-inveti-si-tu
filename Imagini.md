@@ -6,7 +6,7 @@ Toate imaginile care au fost create local, stau într-un registru local din care
 
 Pentru că tot am menționat layerele, pentru oricare imagine există un nivel de bază pe care se adaugă celelalte layere pentru a modela un scenariu cerut. Imaginile docker sunt statice după momentul în care au fost constituite prin îmbogățirea uneia de bază. Asta înseamnă că de vei dori modificarea imaginii pentru a oferi servicii suplimentare sau pentru a reconfigura anumite servicii, va trebui să reconstruiești imaginea sau imaginile. Spun acest lucru pentru că în anumite cazuri o imagine se construiește pe baza altor imagini. Spunem despre imaginea originală că este o imagine părinte, iar despre cea care a fost generată că este una copil.
 
-Poți să-ți creezi propriile imagini sau să le folosești pe cele create de ceilalți aflate într-un registru online. Pentru a *trage* o imagine de la Docker Hub, un depozit de imagini, vei folosi comanda `docker pull nume_imagini` și pentru a construi propria stivă, care servește unei anumite aplicații. Poți folosi `docker commit` pentru a actualiza imaginea online cu cele mai noi modificări, dar de cele mai multe ori vei folosi `docker build` în tandem cu directivele dintr-un `Dockerfile`. Folosirea unui `Dockerfile` permite modificarea unei imagini și rularea acesteia. Fiecare instrucțiune din `Dockerfile` creează un nou layer al imaginii. Atunci când ai nevoie de o mică modificare, o aduci fișierului `Dockerfile` și reconstruiești imaginea. În momentul în care rulezi o instanță a imaginii, spui că ai constituit un container. Acel container poate fi creat, șters, mutat sau distrus.
+Poți să-ți creezi propriile imagini sau să le folosești pe cele create de ceilalți aflate într-un registru online. Pentru a *trage* o imagine de la Docker Hub, un depozit de imagini, vei folosi comanda `docker pull nume_imagini` și pentru a construi propria stivă, care servește unei anumite aplicații. Poți folosi `docker commit` pentru a actualiza imaginea online cu cele mai noi modificări, dar de cele mai multe ori vei folosi `docker build` în tandem cu directivele dintr-un `Dockerfile`. Folosirea unui `Dockerfile` permite modificarea unei imagini și rularea acesteia. Fiecare instrucțiune din `Dockerfile` creează un nou layer al imaginii. Atunci când ai nevoie de o mică modificare, o aduci fișierului `Dockerfile` și reconstruiești imaginea. În momentul în care rulezi o instanță a imaginii, spui că ai constituit un container. Acel container poate fi creat, șters, mutat sau șters.
 Pentru a investiga modificările aduse unei imagini, vei folosi `docker history`.
 
 ## Manipularea imaginilor existente
@@ -27,7 +27,7 @@ Poți descărca imagini și de la terți dacă menționezi id-ul utilizatorului 
 $ sudo docker pull depozit.kosson.ro/numeaplicatie
 ```
 
-Dacă ai nevoie să cauți o anumită imagine, poți folosi `sudo docker search numeimagine`. Dacă vrei să limitezi numărul căutărilor, poți adăuga un pipe`| head -3`, de exemplu îți vor fi aduse primele trei.
+Dacă ai nevoie să cauți o anumită imagine, poți folosi `sudo docker search numeimagine`. Dacă vrei să limitezi numărul căutărilor, poți adăuga un pipe: `| head -3`. În exemplu îți vor fi aduse primele trei.
 
 ### Listarea și aducerea imaginilor disponibile
 
@@ -210,6 +210,31 @@ docker image tag mongodb kosson/mongodb
 ```
 
 Pentru a încărca imaginea în contul Docker hub, va trebuie să te autentifici din linia de comandă mai întâi cu `docker login`. Dacă mașina de pe care lucrezi nu-ți aparține, vei da un `docker logout`.
+
+
+### Eliminarea imaginilor neutilizate
+
+Pentru a șterge imaginile care nu mai sunt utile, există comanda `docker image prune`. Este vorba despre nivelurile ale imaginilor pe care nu le mai folosești, dar care au fost descărcate, nu mai au conexiuni cu imaginile existent și acum ocupă spațiu inutil. Pentru cele pentru care nu ai asociat cel puțin un container: `docker image prune -a`. O comandă care va elimina toate imaginile și alte resurse Docker care nu sunt folosite de containerele care rulează curent este `docker system prune`. Folosiți `docker system prune -a` doar în cazul în care doriți să o luați de la zero sau să faceți curat din rațiuni de spațiu ș.a.m.d. Poți să obții un raport privind spațiul folosit prin execuția comenzii `docker system df`. Un posibil raport poate să semene cu următorul.
+
+```text
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          19        6         10.58GB   3.913GB (36%)
+Containers      55        0         4.51GB    4.51GB (100%)
+Local Volumes   0         0         0B        0B
+Build Cache     0         0         0B        0B
+```
+
+În cazul exemplului de mai sus, prin aplicarea lui `docker image prune -a` putem vedea noul raport obținut prin `docker system df` care indică un câștig de spațiu.
+
+```text
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          6         6         6.723GB   0B (0%)
+Containers      55        0         4.51GB    4.51GB (100%)
+Local Volumes   0         0         0B        0B
+Build Cache     0         0         0B        0B
+```
+
+Subcomanda `prune` poate fi folosită pe `system`, `image` și pe `container`.
 
 ### Ștergerea imaginilor
 

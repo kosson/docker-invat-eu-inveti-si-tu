@@ -1,6 +1,6 @@
 # Storage drivers
 
-Pentru a înțelege modul în care duncționează driverele de stocare, trebuie înțeles foarte bine cum sunt construite imaginile și modul în care Docker folosește imaginile pentru a crea containere.
+Pentru a înțelege modul în care funcționează driverele de stocare, trebuie înțeles foarte bine cum sunt construite imaginile și modul în care Docker folosește imaginile pentru a crea containere.
 
 Aceste drivere sunt cele care permit scrierea datelor într-un layer writable. Această soluție nu este cea mai bună pentru că scierea și citirea datelor se face la o viteză redusă, iar în momentul în care containerul dispare, dispar și datele.
 
@@ -72,7 +72,7 @@ Când execuți un `docker pull` pentru o imagine din depozit sau atunci când cr
 
 În cazul în care Docker este folosit pentru a crea o imagine a cărei bază este o altă imagini care se află deja în local, cea nouă va folosi toate layere-le existente peste care le va adăuga pe cele care-i sunt specifice. 
 
-De exemplu, poți crea o imagine proprie bazată pe ubuntu. Aceasta va fi încărcată în depozitul Docker online a unui utilizator pentru a putea fi descărcată mai târziu.
+De exemplu, poți crea o imagine proprie bazată pe Ubuntu. Aceasta va fi încărcată în depozitul Docker online a unui utilizator pentru a putea fi descărcată mai târziu.
 
 ```yaml
 # kosson/de-test:0.1

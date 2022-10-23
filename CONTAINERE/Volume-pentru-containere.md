@@ -1,18 +1,19 @@
 # Persistența datelor
 
-Toate datele care sunt create într-un container, sunt stocate într-un layer writable. Pe cale de consecință, atunci când containerul nu mai există, nici datele scrise în acesta, nu vor mai fi. Din nefericire, datele din container nu pot fi mutate în alte locații ale sistemului de fișiere gazdă.
-Pentru a scrie datele în layerul writable, este nevoie ca sistemul de fișiere să fie gestionat de un driver specializat - driver storage.
+Toate datele care sunt create într-un container, sunt stocate într-un layer writable. Adu-ți mereu aminte de faptul că un container, de regulă, nu poate fi modificat în ceea ce privește datele (*immutable*), fiind efemer. Pe cale de consecință, atunci când containerul nu mai există, nici datele scrise în acesta, nu vor mai fi. Atunci când un container este oprit, datele din sistemul de fișiere generat intern, vor dispărea (comportamentul din oficiu - OverlayFS). 
 
-Atunci când un container este oprit, datele din sistemul de fișiere generat intern, vor dispărea (comportamentul din oficiu - OverlayFS).
+Din nefericire, datele din container nu pot fi mutate în alte locații ale sistemului de fișiere gazdă. Vorbim despre necesitatea de a beneficia de un mecanism care să asigure persistența datelor. Pentru că de cele mai multe ori vei avea nevoie de date persistente, cum ar fi loguri sau chiar bazele de date în anumite cazuri, Docker oferă *volume* care au un ciclu de viață separat de cel al containerelor și *bind mounts*. În cazul în care Docker funcționează pe o mașină Linux, poți folosi și `tmpfs mount` care vor rula în memorie. Pentru a scrie datele în layer-ul writable, este nevoie ca sistemul de fișiere să fie gestionat de un driver specializat - driver storage.
 
-Pentru că de cele mai multe ori vei avea nevoie de date persistente, cum ar fi loguri sau chiar bazele de date în anumite cazuri, Docker oferă volume care au un ciclu de viață separat de cel al containerelor și *bind mounts*. În cazul în care Docker funcționează pe o mașină Linux, poți folosi și `tmpfs mount` care vor rula în memorie.
+Din punctul de vedere al unui container, datele sunt văzute, fie ca un director, fie ca un fișier mare în structura de fișiere proprie.
 
-Din punctul de vedere al unui container, datele sunt văzute fie ca un director, fie ca un fișier mare în structura de fișiere proprie.
+## tmpfs
 
+Această zonă de stocare a datelor se formează strict în memoria mașinii gazdă. Swarm-urile Docker folosesc tmpfs.
 ## Volume
 
-Un volum este un director asociat unui container în care se pot introduce date. Toate containerele pot folosi același volum. Volumele sunt păstrate chiar și în cazul în care containerul este șters.
-Volumele se crează în structura de directoare a locului unde este instalat Docker pe mașină: `/var/lib/docker/volumes/`. Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Ca administrator trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
+Un volum este un director asociat unui container în care se pot introduce date. Toate containerele pot folosi același volum. Volumele sunt păstrate chiar și în cazul în care containerul este șters din motive evidente de salvgardare a datelor. Volumele se creează în structura de directoare a locului unde este instalat Docker pe mașină: `/var/lib/docker/volumes/`. Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Ca administrator trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
+
+Pentru a vedea cum sunt gestionate volumele în imaginile oficiale, am ales [MariaDB latest](https://hub.docker.com/_/mariadb/tags) din Docker Hub. Unul din layere este dedicat: `VOLUME [/var/lib/mysql]`. În cazul în care vei rula acest container sau oricare altul care creează un volum, poți inspecta ce volume au fost create prin `docker volume ls`. De altfel, volumele apar și în momentul în care investighezi cum a fost configurat containerul folosind `docker container inspect`. În JSON-ul returnat vei vedea chiar unde este mapat volumul pe hard disk-ul mașinii gazdă. Dacă ai aflat care este hash-ul unui volum prin rularea lui `docker volume ls`, poți inspecta acel volum direct `docker volume inspect <hash>`. Reține faptul că volumele persistă după oprirea containerelor. Încă un lucru important este acela că în sistemele NIX (Linux/GNU și MacOS), de fapt containerele rulează într-o mașină virtuală rudimentară, ceea ce nu permite accesul direct la conținutul volumelor.
 
 Pentru crearea unui volum există o comandă specifică: `docker volume create`. Cel mai adesea aceste volume de vor crea atunci când sunt lansate containerele sau atunci când sunt create serviciile.
 
@@ -39,50 +40,7 @@ Volumele nu măresc dimensiunea containerelor care le folosesc pentru că pur ș
 Volumele pot fi numite sau anonime. Cele anonime sunt montate primele de container și li se dau un nume aleatoriu. Nu există nicio diferență de comportament între cele două. Volumele mai permit stocarea datelor pe mașini la distanță sau în cloud. Volumele sunt șterse numai când acest lucru este dorit înadins.
 
 Atunci când este nevoie să muți datele de pe o mașină gazdă pe alta, directorul în care se află volumele este cel care va fi mutat: `/var/lib/docker/volumes`.
-
-## Bind mounts
-
-Aceste puncte de stocare a datelor se pot seta oriunde pe sistemul de operare gazdă. Au funcționalități reduse.
-Folosirea unui *bind mount* se va solda cu montarea unui director specificat în container. Ceea ce permite un *bind mount* este modificarea sistemului de fișiere al mașinii gazdă chiar din container.
-
-```bash
-## Sincronizeaza directoarele de lucru folosind un volum bind mount
-## docker run -v pathonlocal:pathoncontainer -p 8080:8080 -d name nume_container nume_imagine
-docker run -v /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
-# sau poți folosi variabile de sistem. Ptr. Linux:
-docker run -v $(pwd):/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
-## Windows command
-docker run -v %cd%:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
-## Windows PowerShell
-docker run -v ${pwd}:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
-```
-
-Fii foarte atent, pentru că în cazul în care ai o aplicație Node.js și de pe mașina locală ai șters directorul `node_modules`, acest lucru va fi reflectat fidel și in directorul de lucru al containerului chiar dacă la momentul consituirii imaginii, ai instalat `node_modules` pentru a fi disponibile viitoarei aplicații copiate în directorul de lucru. Pentru a rezolva acest aspect, vom crea un volum.
-
-```bash
-## La crearea imaginii adaugă volumul
-docker run -v $(pwd):/var/www/redcolector -v /var/www/redcolector/node_modules -p 8080:8080 -d name nume_container nume_imagine
-```
-
-Acest al doilea *bind mount* se bazează pe faptul că aceste volume sunt montate în funcție de specificitatea lor. Al doilea va preveni suprascrierea directorului `node_modules` pentru că are o cale specifică acestuia. În continuare, vor fi sincronizate toate celelalte fișiere, dar nu și acest director. Putem spune că `-v /var/www/redcolector/node_modules` este un volum *anonim*.
-
-Atenție, *bind mount*-ul este doar pentru procesul de development. Deci, copierea fișierelor în imagine este obligatorie, chiar dacă se face această oglindire la momentul în care containerul rulează. În cazul în care sunt create resurse (directoare, fișiere) în timp ce containerul rulează, acestea vor apărea automat și pe mașina gazdă. Deci, un *bind mount* este bidirecțional.
-
-În cazul în care nu dorești ca modificările făcute pe mașina locală să nu se reflecte și pe container, va trebui să facem legătura *bind mount*-ului read-only. Acest lucru înseamnă că la rularea containerului, codul existent și structura acestuia nu va putea fi modificată.
-
-```bash
-## Declararea volumului ca fiind read-only (:ro)
-docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_modules -p 8080:8080 -d name nume_container nume_imagine
-```
-
-Astfel de tip de storage poate fi folosit pentru a face schimb de fișiere de configurare între gazdă și containere. Acesta este și mecanismul prin care Docker rezolvă rezoluția DNS prin montarea fișierului `/etc/resolv.conf` în fiecare container.
-
-## tmpfs
-
-Această zonă de stocare a datelor se formează strict în memoria mașinii gazdă.
-Swarm-urile Docker folosesc tmpfs.
-
-## Comportamente
+## Comportamente ale volumelor
 
 Dacă montezi un volum gol într-un director al containerului care este populat, fișierele și directoarele existente în acel director vor fi copiate în volumul gol. Pur și simplu se vor propaga și acolo.
 
@@ -92,10 +50,10 @@ Dacă montezi un *bind mount* sau un volum care nu este gol într-un director al
 
 ## Montarea volumelor la run
 
-Volumele, indiferent unde le specifici în container, de fapt vor fi montate în `/mnt`-ul gazdei. De exemplu, pentru a avea un director în care să dezvolți o aplicație pentru Node, va trebui să folosești un director în care codul tău să persiste. Pentru a porni un server de Node care să aibă un volum, poți să-l specifici în linia de comandă care pornește containerul.
+Volumele, indiferent unde le specifici în container, de fapt vor fi montate în `/mnt`-ul gazdei. De exemplu, pentru a avea un director în care să dezvolți o aplicație pentru Node.js, va trebui să folosești un director în care codul tău să persiste. Pentru a porni un server de Node.js care să aibă un volum, poți să-l specifici în linia de comandă care pornește containerul.
 
 ```bash
-docker run -p 8080:3000 -v ./calea/pe/host:/cale/din/container
+docker container run -d --name aplicatie -p 8080:3000 -v ./calea/pe/host:/cale/din/container nume_imagine
 ```
 
 Docker va crea volumul menționat de opțiunea `-v` prin alias-ul `./calea/pe/host`.
@@ -109,7 +67,52 @@ volumes:
 
 Căile trebuie să fie mereu relative la directorul din care se ridică construcția docker-compose. În cazul în care folosești Linux, poți folosi utilitare precum `pwd` pentru a seta punctul de referință de la care se pornește.
 
-## Montarea volumelor în docker-compose
+### Volume cu nume
+
+În cazul în care este necesar, la momentul pornirii containerelor cu `run`, se pot crea volume care poartă nume: `docker container run -d --name aplicatie -p 8080:3000 -v nume_volum:/cale/din/container nume_imagine`. Făcând acest lucru, la o investigare cu `docker volume ls`, volumul nou creat va avea un nume, nu un hash care este generat automat. Să aruncăm o privere la MariaDB.
+
+```bash
+docker container run -d --name mariadb -e MYSQL_ALLOW_EMPTY_PASSWORD=True -v mariadb_vol1:/var/lib/mysql mariadb
+Unable to find image 'mariadb:latest' locally
+latest: Pulling from library/mariadb
+cf92e523b49e: Pull complete 
+11a7b642a1b0: Pull complete 
+d05db1f7ddc9: Pull complete 
+043662c3afa1: Pull complete 
+de48eea20795: Pull complete 
+1a40b9e7476d: Pull complete 
+d053ff7fa7cc: Pull complete 
+f4459f17c9a8: Pull complete 
+05ae67b7d96a: Pull complete 
+9bd55ebdb8b3: Pull complete 
+baf1cda74ce3: Pull complete 
+Digest: sha256:59ef1139afa1ec26f98e316a8dbef657daf9f64f84e9378b190d1d7557ad2feb
+Status: Downloaded newer image for mariadb:latest
+4e58571c0d09a4b701fcea4a5e74fe3fda52d8f5be24b25280b86185fb3397d6
+
+docker container ls
+CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS         PORTS      NAMES
+4e58571c0d09   mariadb   "docker-entrypoint.s…"   9 seconds ago   Up 6 seconds   3306/tcp   mariadb
+
+docker volume ls
+DRIVER    VOLUME NAME
+local     mariadb_vol1
+
+docker volume inspect mariadb_vol1 
+[
+    {
+        "CreatedAt": "2022-10-23T13:47:40+03:00",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/mariadb_vol1/_data",
+        "Name": "mariadb_vol1",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+```
+
+## Montarea volumelor în docker compose
 
 Nu monta în serviciile pe care le creezi căi către bazele de date din container. Performanțele vor fi oribile dacă vor funcționa astfel de legături. În astfel de cazuri, cel mai bine ar fi să fie folosite volume denumite (named volumes).
 
@@ -155,7 +158,7 @@ volumes:
 
 ## Creare volume particularizate
 
-Uneori este nevoie să creezi un volum pe care să-l atașezi unui container. Pentru crearea volumelor vei folosi sub-comanda `volume create`.
+Uneori este nevoie să creezi un volum pe care să-l atașezi unui container. Pentru crearea volumelor vei folosi sub-comanda `volume create` înainte de a crea containerul propriu-zis. Crearea volumelor în acest mod permite specificarea driverelor în cazul în care acest lucru este necesar.
 
 ```bash
 docker volume create redis_date
@@ -190,8 +193,45 @@ Un alt lucru pe care trebuie să-l ții în minte este acela că poți șterge v
 docker rm -v nume_container_sau_id
 ```
 
-În cazul folosirii node, ai nevoie să execuți comenzile de pornire a serverului. Pentru a seta contextul de execuție, vei folosi opțiunea `-w "/var/www"`, care este urmată de directorul din container.
+În cazul folosirii Node.js, ai nevoie să execuți comenzile de pornire a serverului. Pentru a seta contextul de execuție, vei folosi opțiunea `-w "/var/www"`, care este urmată de directorul din container.
 
 ```bash
 docker run -p 8080:3000 -v $(pwd):/var/wwww -w "/var/www" node npm start
 ```
+
+## Bind mounts
+
+Aceste puncte de stocare a datelor se pot seta oriunde pe sistemul de operare gazdă. Au funcționalități reduse.
+Folosirea unui *bind mount* se va solda cu montarea unui director specificat în container. Ceea ce permite un *bind mount* este modificarea sistemului de fișiere al mașinii gazdă chiar din container.
+
+```bash
+## Sincronizeaza directoarele de lucru folosind un volum bind mount
+## docker run -v pathonlocal:pathoncontainer -p 8080:8080 -d name nume_container nume_imagine
+docker run -v /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+# sau poți folosi variabile de sistem. Ptr. Linux:
+docker run -v $(pwd):/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+## Windows command
+docker run -v %cd%:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+## Windows PowerShell
+docker run -v ${pwd}:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+```
+
+Fii foarte atent, pentru că în cazul în care ai o aplicație Node.js și de pe mașina locală ai șters directorul `node_modules`, acest lucru va fi reflectat fidel și in directorul de lucru al containerului chiar dacă la momentul consituirii imaginii, ai instalat `node_modules` pentru a fi disponibile viitoarei aplicații copiate în directorul de lucru. Pentru a rezolva acest aspect, vom crea un volum.
+
+```bash
+## La crearea imaginii adaugă volumul
+docker run -v $(pwd):/var/www/redcolector -v /var/www/redcolector/node_modules -p 8080:8080 -d name nume_container nume_imagine
+```
+
+Acest al doilea *bind mount* se bazează pe faptul că aceste volume sunt montate în funcție de specificitatea lor. Al doilea va preveni suprascrierea directorului `node_modules` pentru că are o cale specifică acestuia. În continuare, vor fi sincronizate toate celelalte fișiere, dar nu și acest director. Putem spune că `-v /var/www/redcolector/node_modules` este un volum *anonim*.
+
+Atenție, *bind mount*-ul este doar pentru procesul de development. Deci, copierea fișierelor în imagine este obligatorie, chiar dacă se face această oglindire la momentul în care containerul rulează. În cazul în care sunt create resurse (directoare, fișiere) în timp ce containerul rulează, acestea vor apărea automat și pe mașina gazdă. Deci, un *bind mount* este bidirecțional.
+
+În cazul în care nu dorești ca modificările făcute pe mașina locală să nu se reflecte și pe container, va trebui să facem legătura *bind mount*-ului read-only. Acest lucru înseamnă că la rularea containerului, codul existent și structura acestuia nu va putea fi modificată.
+
+```bash
+## Declararea volumului ca fiind read-only (:ro)
+docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_modules -p 8080:8080 -d name nume_container nume_imagine
+```
+
+Astfel de tip de storage poate fi folosit pentru a face schimb de fișiere de configurare între gazdă și containere. Acesta este și mecanismul prin care Docker rezolvă rezoluția DNS prin montarea fișierului `/etc/resolv.conf` în fiecare container.
