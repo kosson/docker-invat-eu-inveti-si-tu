@@ -202,7 +202,7 @@ docker run -p 8080:3000 -v $(pwd):/var/wwww -w "/var/www" node npm start
 ## Bind mounts
 
 Aceste puncte de stocare a datelor se pot seta oriunde pe sistemul de operare gazdă. Au funcționalități reduse.
-Folosirea unui *bind mount* se va solda cu montarea unui director specificat în container. Ceea ce permite un *bind mount* este modificarea sistemului de fișiere al mașinii gazdă chiar din container.
+Folosirea unui *bind mount* va monta un director sau un fișier specificat în containerul ales. Pe scurt, folosești locația unui fișier sau a unui director de pe mașina gazdă în container. *Bind mount* permite modificarea sistemului de fișiere al mașinii gazdă chiar din container.
 
 ```bash
 ## Sincronizeaza directoarele de lucru folosind un volum bind mount
@@ -216,7 +216,7 @@ docker run -v %cd%:/var/www/redcolector -p 8080:8080 -d name nume_container nume
 docker run -v ${pwd}:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
 ```
 
-Fii foarte atent, pentru că în cazul în care ai o aplicație Node.js și de pe mașina locală ai șters directorul `node_modules`, acest lucru va fi reflectat fidel și in directorul de lucru al containerului chiar dacă la momentul consituirii imaginii, ai instalat `node_modules` pentru a fi disponibile viitoarei aplicații copiate în directorul de lucru. Pentru a rezolva acest aspect, vom crea un volum.
+Fii foarte atent, pentru că în cazul în care ai o aplicație Node.js și de pe mașina locală ai șters directorul `node_modules`, acest lucru va fi reflectat fidel și in directorul de lucru al containerului chiar dacă la momentul constituirii imaginii ai instalat `node_modules` pentru a fi disponibile viitoarei aplicații copiate în directorul de lucru. Pentru a rezolva acest aspect, vom crea un volum.
 
 ```bash
 ## La crearea imaginii adaugă volumul
@@ -235,3 +235,37 @@ docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_module
 ```
 
 Astfel de tip de storage poate fi folosit pentru a face schimb de fișiere de configurare între gazdă și containere. Acesta este și mecanismul prin care Docker rezolvă rezoluția DNS prin montarea fișierului `/etc/resolv.conf` în fiecare container.
+
+## Probleme legate de permisiuni
+
+Ce se întâmplă atunci când mai multe containere accesează același volum sau bind-mount? Ownership-ul este definit de numere. O privire la `/etc/passwd` și la `/etc/goup` este edificatoare în acest sens. În marea lor majoritate containerele au și ele la rândul lor aceste fișiere care pot fi inspectate.
+O problemă care poate apărea este faptul că `/etc/passwd` este diferit pentru fiecare dintre containere. În acest caz regula spune că două procese care accesează același fișier trebuie să aibă același ID de user sau de grup.
+Pentru a depana, mai întâi obține un tty în containere, rulează un `ps aux` (dacă nu e instalat: `apt-get update && apt-get install procps`) și vezi care sunt procesele care rulează, apoi identifică UID/GID-ul din `/etc/passwd` și `/etc/goup`. Este posibil să observi faptul că userul unui container creează un fișier, dar procesul unui alt container care ar trebui să folosească fișierul are un alt UID/GID. Rezolvarea este să te asiguri că ambele containere, în cazul că vorbim de minim două, rulează fie având user id-ul identic (creezi user în Dockerfile), fie id-ul grupului identic. Observă cum creatorii imaginii de Node.js hardcodează crearea userului în https://github.com/nodejs/docker-node/blob/main/19/alpine3.16/Dockerfile.
+
+```yaml
+FROM alpine:3.16
+
+ENV NODE_VERSION 19.0.0
+
+RUN addgroup -g 1000 node \
+    && adduser -u 1000 -G node -s /bin/sh -D node 
+```
+
+Și cazul Nginx - https://github.com/nginxinc/docker-nginx/blob/master/mainline/debian/Dockerfile:
+
+```yaml
+FROM debian:bullseye-slim
+
+LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
+
+ENV NGINX_VERSION   1.23.2
+ENV NJS_VERSION     0.7.7
+ENV PKG_RELEASE     1~bullseye
+
+RUN set -x \
+# create nginx user/group first, to be consistent throughout docker variants
+    && addgroup --system --gid 101 nginx \
+    && adduser --system --disabled-login --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid 101 nginx
+```
+
+Recomandabil este setarea de numere pentru USER în loc de nume.
