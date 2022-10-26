@@ -1,8 +1,8 @@
 # Introducere
 
-Docker este o platformă deschisă pentru dezvoltarea, livrarea și rularea de aplicații. Docker permite desprinderea aplicației create de infrastructură. Docker este scris în limbajul de programare Go și se bazează pe anumite caracteristici ale kernelului Linux.
+Docker este o platformă deschisă pentru dezvoltarea, livrarea și rularea de aplicații. Docker permite desprinderea aplicației create de infrastructura de care are nevoie să ruleze. Docker este scris în limbajul de programare Go și se bazează pe anumite caracteristici ale kernelului Linux.
 
-Această tehnologie permite împachetarea și rularea unei aplicații într-un mediu izolat numit *container*. Aceste containere conțin tot ceea ce este necesar pentru a rula aplicația fără a-ți pune problema dacă pe host există stivele tehnologiilor necesare.
+Această tehnologie permite împachetarea și rularea unei aplicații într-un mediu izolat numit *container*. Aceste containere conțin tot ceea ce este necesar pentru a rula aplicația fără a-ți pune problema dacă pe host există stivele tehnologiilor necesare. Începând cu anul 2015, Docker este parte a [Open Container Initiative (OCI)](https://opencontainers.org/) o structură care sub auspiciile organizației Linux Foundation asigură standardizarea formatelor și a mediilor de rulare pentru containere.
 
 Containerele pot fi folosite pentru distribuirea și testarea aplicației. Tot containerele permit *continuous integration* și *continuous delivery* (CI/CD).
 
