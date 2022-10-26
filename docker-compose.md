@@ -7,8 +7,6 @@ Docker Compose este un instrument pentru definirea și rularea unei aplicații c
 Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul YAML Ain't Markup Language, fiind o structură de codare a informațiilor (serializare a datelor) bazată pe spațiere și pe linii, care țintește ușoara înțelegere de către oameni, dar și mașini. Mai multe detalii privind acest tip de fișiere la yaml.org. un posibil model este cel pe care îl jalonăm mai jos.
 
 ```yaml
-version: '3.1'   # este numărul de versiune a unui fișier docker compose. Versiunea 2 este minim 
-
 services:        # precizează containerele, având același comportament precum docker run
   servicename:   # este un nume ales arbitrar, dar care va juca rol de adresă DNS în rețea
     image:       # Dacă folosești build:
