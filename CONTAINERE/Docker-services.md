@@ -5,7 +5,6 @@ Un stack este un grup de servicii inter-relaționate care au dependințe comune 
 Uneori ai nevoie să adaugi noi servicii în fișierul `docker-compose.yml`.
 
 ```yaml
-version: "3"
 services:
   web:
     image: kosson/numeImagine:0.1
@@ -36,7 +35,7 @@ networks:
   webnet:
 ```
 
-Acestui fișier i s-a adăugat un servici de vizualizare numit `visualizer` care este un pachet software oferit chiar de Docker (https://github.com/ManoMarks/docker-swarm-visualizer). Volumul menționat va oferi acces containerului la fișierul de socket al lui Docker. Cheia `placement` menționează faptul că serviciul nu va funcționa decât pe managerul de swarm și niciodată pe un worker.
+Acestei construcții i s-a adăugat un serviciu de vizualizare numit `visualizer` care este un pachet software oferit chiar de Docker (https://github.com/ManoMarks/docker-swarm-visualizer). Volumul menționat va oferi acces containerului la fișierul de socket al lui Docker. Cheia `placement` menționează faptul că serviciul nu va funcționa decât pe managerul de swarm și niciodată pe un worker.
 
 Pentru a realiza un astfel de serviciu de vizualizare, trebuie să conectezi o consolă la mașina virtuală cu rol de manager.
 
@@ -115,7 +114,6 @@ Un serviciu permite definirea unei stări dorite.
 Aceste servicii sunt definite prin construirea unui fișier `docker-compose.yml`.
 
 ```yaml
-version: "3"
 services:
   web:
     image: kosson/numeImagine:0.1

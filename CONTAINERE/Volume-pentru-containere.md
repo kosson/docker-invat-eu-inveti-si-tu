@@ -176,7 +176,7 @@ Pentru a avea o perspectivă privind volumele folosite de containere, se poate a
 
 ## Configurarea volumelor
 
-Să presupunem că tot o aplicație web folosind Node dorim să dezvoltăm. Asta, de regulă necesită un director `/var/www` în care pui sursele.
+Să presupunem că tot o aplicație web folosind Node.js dorim să dezvoltăm. Asta, de regulă necesită un director `/var/www` în care pui sursele.
 
 ```bash
 docker run -p 8080:3000 -v $(pwd):/var/www node

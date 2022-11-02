@@ -209,6 +209,14 @@ Când vei construi o imagine pe care să o consideri fiind cea de bază, adică 
 docker image tag mongodb kosson/mongodb
 ```
 
+Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul listării imaginilor. Dacă ai uitat, poți folosi sub-comanda `tag` pentru a da un nume imaginii. Numele se dă la momentul construcției imaginii adăugând opțiunea `-t numeimaginenoua`.
+
+```bash
+docker build -t numeimaginenoua .
+```
+
+Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`. Dacă este menționat punctul la finalul sub-comenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
+
 Pentru a încărca imaginea în contul Docker hub, va trebuie să te autentifici din linia de comandă mai întâi cu `docker login`. Dacă mașina de pe care lucrezi nu-ți aparține, vei da un `docker logout`.
 
 

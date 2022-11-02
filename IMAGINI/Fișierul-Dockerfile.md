@@ -1,14 +1,25 @@
 # Dockerfile
 
-Este un fișier text pe baza căruia se va genera o imagine.
+Este un fișier text pe baza căruia se va genera o imagine, care va sta la baza rulării unui container. Chiar dacă poți rula un container separat, ceea ce face din Docker o tehnologie cu adevărat demnă de atenție este faptul că poți parametriza funcționarea containerului printr-un fișier dedicat numit `Dockerfile.yaml`. Acest lucru presupune că vei folosi o imagine deja existentă, nu una pe care să o construiești de la 0. Un exemplu de rulare a unei aplicații de Python pe care-l oferă documentația.
 
-Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul listării imaginilor. Dacă ai uitat, poți folosi sub-comanda `tag` pentru a da un nume imaginii. Numele se dă la momentul construcției imaginii adăugând opțiunea `-t numeimaginenoua`.
-
-```bash
-docker build -t numeimaginenoua .
+```yaml
+# Folosești un runtime oficial drept punct de construcție a noii imagini
+FROM python:2.7-slim
+# Setezi directorul în care vei pune resursele aplicației la /app
+WORKDIR /app
+# Copiezi conținutul directorului curent al aplicației în /app
+COPY . /app
+# Instalezi pachetele și dependințele specificate în  requirements.txt
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+# MExpui portul 80 al containerului către exterior
+EXPOSE 80
+# Definești variabile de mediu
+ENV NAME World
+# Rulezi fișierul app.py atunci când containerul va porni
+CMD ["python", "app.py"]
 ```
 
-Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`. Dacă este menționat punctul la finalul sub-comenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
+Fișierul `Dockerfile.yml` trebuie să fie chiar unde sunt cele două resurse `app.py` și `resources.txt` pentru a se face copierea.
 
 ## Sintaxa instrucțiunilor
 
@@ -85,7 +96,7 @@ La nevoie această instrucțiune va putea crea directoare sau va putea suprascri
 COPY app HELP.md /home/gigi
 ```
 
-Se observă din comadă că pot fi copiate mai multe resurse specificate una după alta separate prin spațiu.
+Se observă din comandă că pot fi copiate mai multe resurse specificate una după alta separate prin spațiu.
 
 Un alt exemplu ar fi copierea fișierelor `package.json` și `package-lock.json` atunci când construim un container pentru o aplicație Node.js.
 
@@ -169,7 +180,6 @@ Permite rularea de comenzi la momentul constituirii de noi imagini. Rezultatul f
 Poți folosi o singură instrucțiune `RUN` pentru a reduce numărul de layere care se vor constitui. Aceasta este forma proprie shell-ului.
 
 ```yaml
-version: "3"
     FROM python:3.5
     RUN apt-get update -y && apt-get upgrade -y
 ```
@@ -203,6 +213,8 @@ Dacă `RUN` este o comandă care primește mai mulți parametri, mai întâi est
 ```yaml
 RUN ["apt-get", "install", "python3"]
 ```
+
+În cazul în care în imagine descarci ultima versiune de aplicație din depozitul de git, la lansarea comenzii cu RUN folosește opțiunile `--single-branch --depth 1` pentru a nu descărca întregul depozit GIT al aplicației, ci doar codul ultimei versiuni actualizate.
 
 ## Instrucțiunea CMD
 
@@ -295,7 +307,6 @@ VOLUME calea/director01
 Inițial, directorul de lucru al imaginii este rădăcina `/`. Folosind această instrucțiune, vei schimba directorul de lucru la cel specificat de aplicația pe care dorești să o introduci ca nivel suplimentar într-o imagine personalizată. Instrucțiunile care vor urma acesteia, vor folosi directorul de lucru nou (`RUN`, `CMD` și `ENTRYPOINT`). Un exemplu ar fi constituirea unei imagini chiar din directorul în care se află aplicația dezvoltată.
 
 ```yaml
-version: "3"
     FROM    node:latest
     MAINTAINER Nico Dandana
     ENV     NODE_ENV=developement

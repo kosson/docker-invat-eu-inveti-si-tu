@@ -80,29 +80,6 @@ docker container run --publish 80:80 --detach nginx
 
 Va fi returnat un identificator unic pentru containerul care rulează nginx. De fiecare dată când vei rula câte un container, va fi returnat un id unic pentru acel container.
 
-### Dockerfile
-
-Chiar dacă poți rula un container separat, ceea ce face din Docker o tehnologie cu adevărat demnă de atenție este faptul că poți parametriza funcționarea containerului printr-un fișier dedicat numit `Dockerfile`. Acest lucru presupune că vei folosi o imagine deja existentă, nu una pe care să o construiești de la 0. Un exemplu de rulare a unei aplicații de Python pe care-l oferă documentația.
-
-```yaml
-# Folosești un runtime oficial drept punct de construcție a noii imagini
-FROM python:2.7-slim
-# Setezi directorul în care vei pune resursele aplicației la /app
-WORKDIR /app
-# Copiezi conținutul directorului curent al aplicației în /app
-COPY . /app
-# Instalezi pachetele și dependințele specificate în  requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
-# MExpui portul 80 al containerului către exterior
-EXPOSE 80
-# Definești variabile de mediu
-ENV NAME World
-# Rulezi fișierul app.py atunci când containerul va porni
-CMD ["python", "app.py"]
-```
-
-Fișierul `Dockerfile.yml` trebuie să fie chiar unde sunt cele două resurse `app.py` și `resources.txt` pentru a se face copierea.
-
 ### Lansarea unui container ca daemon
 
 La momentul rulării unei imagini, dacă nu adaugi `--detach` sau mai simplu `-d`, terminalul sau consola vor fi blocate. Folosirea lui detach va debloca consola pentru a putea fi utilizată și pentru alte operațiuni. Pentru a rula un container ca un daemon, trebuie să-l detașăm de terminalul care l-a pornit. Pentru aceasta avem subcomanda `detach`, care poate fi pasat subcomenzii `run` drept opțiune.

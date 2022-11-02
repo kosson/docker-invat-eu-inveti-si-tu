@@ -49,7 +49,6 @@ services:
 În cazul de mai sus, serviciul `node` va fi unul particularizat pentru că construit pornind cu fișierele din directorul curent (`.`), menționat la `context`, folosind fișierul `Dockerfile` numit `dockerfilenode`. Pe scurt, vom căuta să *injectăm* aplicația proprie pe un layer suplimentar chiar în imaginea de node. Pentru ca toate containerele care vor rula, trebuie să existe o rețea în care să comunice. Rețeaua va fi precizată cu un nume la alegere la secțiunea `networks`. Uzual, rețeaua este de tip `bridge`. Serviciului `node` îi poți adăuga un `mongodb`.
 
 ```yaml
-version: '2.4'
 services:
   node:
     build:
@@ -83,7 +82,9 @@ Când ai terminat de adăugat toate componentele, se va folosi comanda `docker-c
 
 Versiunea 3 nu va înlocui versiunea 2. Versiunea 2 a fișierului este focalizată pe noduri unice folosite pentru dezvoltare sau testare. Versiunea 3 se focalizează mai mult pe orchestrarea multi-node. Este recomandabil ca în cazul în care nu este folosit Kubernetes sau Swarm, folosește versiunea 2, care este actualizată continuu.
 
-Versiunea de lucru care trebuie specificată pentru fișierul `docker-compose.yml` este importantă pentru că sunt diferite interpretări ale directivelor de pe fiecare linie în funcție de versiunea de `docker-compose` care este instalată odată cu Docker. Începând cu Docker 18.06.0+ este indicat ca versiunea folosită să fie 3.7.
+Versiunea de lucru care trebuie specificată pentru fișierul `docker-compose.yml` este importantă pentru că sunt diferite interpretări ale directivelor de pe fiecare linie în funcție de versiunea de `docker compose` care este instalată odată cu Docker. Începând cu Docker 18.06.0+ este indicat ca versiunea folosită să fie 3.7. 
+
+Mai nou, pentru versiunile mai noi ale lui `docker` (peste 20) nici nu mai este nevoie să specifici versiunea de fișier.
 
 În acest moment, Docker are versiunea 20+ ceea ce înseamnă că fișierele `docker-compose.yml` nu mai trebuie să menționeze versiunea.
 
@@ -100,7 +101,6 @@ docker container run -d --name redis -v nume_dorit:/data --network reteaua_conta
 La fel se va petrece dacă este menționat locul de unde se va face maparea unui director de pe mașina gazdă în container. Acest lucru se realizează mai simplu prin introducerea directă în `docker-compose.yml`.
 
 ```yaml
-version "2.4"
 services:
   redis:
     image: alpine:redis
@@ -123,7 +123,7 @@ docker compose -f docker-compose.special.yml exec db bash
 
 ## Utilitarul docker compose
 
-Utilitarul `docker compose` este cea mai bună soluție atunci când se face dezvoltare locală. Începând cu versiunea a doua a utilitarului `compose`, aplarea nu se mai face cu `docker-compose`, ci prin `docker compose`. Binarul `compose` este separat de `docker`. Reține faptul că este un instrument pentru dezvoltae locală. Nu este pentru mediile de producție.
+Utilitarul `docker compose` este cea mai bună soluție atunci când se face dezvoltare locală. Începând cu versiunea a doua a utilitarului `compose`, aplarea nu se mai face cu `docker-compose`, ci prin `docker compose`. Binarul `compose` este separat de `docker`. Reține faptul că este un instrument pentru dezvoltare locală. Nu este pentru mediile de producție.
 
 Uneori ai nevoie să lansezi aplicațiile la momentul constituirii containerului prin rularea lui `docker compose run`.
 
@@ -171,7 +171,7 @@ Pentru această comandă, nu este nevoie să modifici celelalte componente ale m
 docker compose -f docker-compose.special.yml up -d
 ```
 
-#### Reconstrucția imaginilor
+#### Reconstrucția imaginilor la pornirea containerelor
 
 În cazul în care ai modificat codul în mașina de dezvoltare, modificările nu se reflectă automat în imaginea construită pentru respectivul serviciu. În acest caz, este nevoie de o reconstrucție a imaginii înainte de a ridica containerele.
 
@@ -222,6 +222,10 @@ Această comandă oprește containerele, nu le șterge.
 
 ### Comanda `docker compose start`
 
+### Comanda `docker compose build`
+
+În cazul în care contrucția pe care o inițiezi este una complexă cu mai multe niveluri pentru fiecare serviciu, cu variabile de mediu, etc., este la îndemână să folosești comanda `docker compose build`.
+
 ### Comanda `docker compose logs`
 
 Comanda afișează log-urile tuturor containerelor.
@@ -241,9 +245,9 @@ Este o comandă pentru a executa o comandă într-un container.
 ```yaml
 services:
   api:
-    image: node:10.15.3-alpine
-    container_name: tqd-node
     build: .
+    image: node:10.15.3-alpine
+    container_name: nodejs
     ports:
       - 3000:3000
     environment:
@@ -261,7 +265,7 @@ services:
     networks:
       - esnet
   elasticsearch:
-    container_name: tqd-elasticsearch
+    container_name: elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
     volumes:
       - esdata:/usr/share/elasticsearch/data
@@ -282,8 +286,23 @@ networks:
   esnet:
 ```
 
-În secțiunea `services` declarăm primul serviciu numit `api`, care va fi aplicația noastră Node.js. Acest container va fi numit arbitrar `tqd-node`.
-Comanda `build` va căuta în același director în care se află fișierul `docker-compose.yml` fișierul `Dockerfile.yml` pentru a genera containerul dedicat serviciului. Va fi expus portul `3000` făcându-se un NAT traversal de la portul intern 3000 al containerului, la portul extern accesibil mașinii pe care se face construcția serviciilor.
+În secțiunea `services` declarăm primul serviciu numit `api`, care va fi aplicația noastră Node.js. Acest container va fi numit arbitrar `nodejs`. Directiva `image` este cea care caută în cache-ul local dacă există imaginea cu numele `node:10.15.3-alpine`. Dacă nu, se va uita la directiva `build` care va crea imaginea în funcție de comenzile pe care le găsește.
+Comanda `build` va căuta în același director în care se află fișierul `docker-compose.yml` fișierul cu numele `Dockerfile.yml` pentru a genera containerul dedicat serviciului. În cazul în care trebuie să construiești mai multe imagini, pentru fiecare dintre acestea va trebui să ai câte un `Dockerfile.yml` separat. Din acest motiv, poți redenumi fișierele de tip `Dockerfile` pentru a indica apoi în secțiunea `build` care este cel care va fi folosit pentru imaginea serviciului.
+
+```yaml
+services:
+  api:
+    build:
+      context: .
+      dockerfile: nodejs.Dockerfile
+    image: nodejs
+    ports:
+      - 3000:3000
+```
+
+Observă faptul că în secțiunea `build` am specificat prin punctul de la `context` faptul că va găsi fișierul `Dockerfile` în directorul de unde se rulează `docker compose`, iar numele fișierului este `nodejs.Dockerfile`. Reține că în cazul în care nu este găsită imaginea `nodejs` deja construită și disponibilă din cache-ul local, se va căuta rețeta de construcție în secțiunea `build`. Atunci când nu denumești imaginea care va fi creată prin `image: nume_imagine`, `docker` va crea automat o denumire constituită din numele directorului de unde s-a rulat `docker compose`, la care se adaugă numele serviciului.
+
+Va fi expus portul `3000` făcându-se un NAT traversal de la portul intern 3000 al containerului, la portul extern accesibil mașinii pe care se face construcția serviciilor.
 Urmează setarea unor variabile de mediu și apoi se montează un director al containerului în care vor fi păstrate date chiar și după restartul containerului (permanentizare).
 Urmează menționarea comenzii care trebuie lansată la momentul în care containerul este pornit.
 
@@ -294,9 +313,9 @@ depends_on:
     - elasticsearch
 ```
 
-Urmează menționarea faptului că prezentul container al aplicației se leagă de containerul în care va rula Elasticsearch numit `elasticsearch`. Instrucțiunea `depends_on` spune curentului container că depinde de containerul `elasticsearch` și trebuie să aștepte ca acela să pornească mai întâi.
+Urmează menționarea faptului că prezentul container al aplicației se leagă de containerul în care va rula Elasticsearch numit `elasticsearch`. Instrucțiunea `depends_on` spune containerului curent că depinde de containerul `elasticsearch` și trebuie să aștepte ca acela să pornească mai întâi.
 
-Ultima instrucțiune îi spune containerului să conecteze serviciul `api` pe rețeaua `esnet`. Acest lucru trebuie menționat expres pentru că fiecare container are rețeaua lui. În cazul nostru, instruim containerul `api` să se conecteze la rețeaua generată de containerul în care va rula Elasticsearch.
+Ultima instrucțiune îi spune containerului să conecteze serviciul `api` pe rețeaua `esnet`. Acest lucru trebuie menționat înadins pentru că fiecare container are rețeaua lui. În cazul nostru, instruim containerul `api` să se conecteze la rețeaua generată de containerul în care va rula Elasticsearch.
 
 Pentru a nu crea loguri, la setarea serviciului elasticsearch, se va pune la `logging` un `driver` pe valoarea `none`.
 
@@ -304,7 +323,7 @@ Pentru a nu crea loguri, la setarea serviciului elasticsearch, se va pune la `lo
 
 Nu crea alias-uri: `alias: nume_alias`. Numele serviciului va fi și numele DNS dorit. Docker face acest lucru automat. În cazul în care sunt create mai multe replici, Docker va crea automat alias-uri pentru acestea (DNSRR).
 
-Nu crea linkuri: `alias: nume_alias`. Crearea link-urilor este un lucru legat de trecutul Docker. Toate serviciile compose sunt adăugate la o rețea bridge și astfel vor putea comunica între ele pentru că numele lor vor fi și numele DNS.
+Nu crea linkuri: `alias: nume_alias`. Crearea link-urilor este un lucru legat de trecutul Docker. Toate serviciile compose sunt adăugate la o rețea bridge și astfel vor putea comunica între ele pentru că numele lor vor fi și numele DNS după care vom putea indica unde un server îl găsește pe celălalt.
 
 ```yaml
 links:
@@ -318,7 +337,7 @@ ports:
   - 8090:2368
 ```
 
-Totuși, este o bună practică să menționezi porturile prin EXPOSE într-un Dockerfile pentru că documentează serviciul mai bine.
+Totuși, este o bună practică să menționezi porturile prin EXPOSE într-un `Dockerfile` pentru că documentează serviciul mai bine.
 
 ```yaml
 expose:
@@ -333,7 +352,7 @@ Nu menționa numele containerului atunci când definești serviciul pentru că v
 container_name: db
 ```
 
-Pune întotdeauna valorile de mediu ultimele într-un `docker-compose.yml`.
+Pune întotdeauna valorile de mediu ultimele într-un fișier `docker-compose.yml`.
 
 Nu crea o rețea dacă folosești doar una. Docker creează automat o rețea.
 
