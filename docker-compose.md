@@ -4,7 +4,7 @@ Docker Compose este un instrument pentru definirea și rularea unei aplicații c
 
 ## Fișierul `docker-compose.yml`
 
-Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul YAML Ain't Markup Language, fiind o structură de codare a informațiilor (serializare a datelor) bazată pe spațiere și pe linii, care țintește ușoara înțelegere de către oameni, dar și mașini. Mai multe detalii privind acest tip de fișiere la yaml.org.
+Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul *YAML Ain't Markup Language*, fiind o structură de jalonare a fragmentelor de text cu rol de chei și valori (serializare a datelor) bazată pe spațiere și pe linii. Ținta este ușoara înțelegere de către oameni, dar și mașini a datelor. Mai multe detalii privind acest tip de fișiere la yaml.org.
 
 Acest fișier este folosit pentru configurarea serviciilor. De fapt ceea ce poți realiza este o orchestrare a mai multor containere Docker și pentru a crea legături între acestea. Acest fișier este prelucrat printr-un proces de `build`, din care va rezulta o imagine.
 
@@ -20,7 +20,7 @@ services:
       - prima-retea
 ```
 
-În cazul de mai sus, serviciul `node` va fi unul particularizat pentru că construit pornind cu fișierele din directorul curent (`.`), menționat la `context`, folosind fișierul `Dockerfile` numit `dockerfilenode`. Pe scurt, vom căuta să *injectăm* aplicația proprie pe un layer suplimentar chiar în imaginea de node. Pentru ca toate containerele care vor rula, trebuie să existe o rețea în care să comunice. Rețeaua va fi precizată cu un nume la alegere la secțiunea `networks`. Uzual, rețeaua este de tip `bridge`. Serviciului `node` îi poți adăuga un `mongodb`.
+În cazul de mai sus, serviciul `node` va fi unul particularizat pentru că construit pornind cu fișierele din directorul curent (`.`), menționat la `context`, folosind fișierul `Dockerfile` numit `dockerfilenode`. Pe scurt, vom căuta să *injectăm* aplicația proprie pe un layer suplimentar chiar în imaginea de Node.js. Pentru toate containerele care vor rula, trebuie să existe o rețea în care să comunice. Rețeaua va fi precizată cu un nume la alegere la secțiunea `networks`. Uzual, rețeaua este de tip `bridge`. Serviciului `node` îi poți adăuga un `mongodb`.
 
 ```yaml
 services:

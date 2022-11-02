@@ -1,0 +1,3 @@
+runcmd:
+  - 'curl -sSL http://get.docker.com/ | VERSION=20.10.14 sh'
+  - 'usermod -aG docker ubuntu'

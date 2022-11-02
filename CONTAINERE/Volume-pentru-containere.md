@@ -1,6 +1,6 @@
 # Persistența datelor
 
-Toate datele care sunt create într-un container, sunt stocate într-un layer writable. Adu-ți mereu aminte de faptul că un container, de regulă, nu poate fi modificat în ceea ce privește datele (*immutable*), fiind efemer. Pe cale de consecință, atunci când containerul nu mai există, nici datele scrise în acesta, nu vor mai fi. Atunci când un container este oprit, datele din sistemul de fișiere generat intern, vor dispărea (comportamentul din oficiu - OverlayFS). 
+Toate datele care sunt create într-un container, sunt stocate într-un layer writable. Adu-ți mereu aminte de faptul că un container, de regulă, nu poate fi modificat în ceea ce privește datele (*immutable*), fiind efemer. Pe cale de consecință, atunci când containerul nu mai există, nici datele scrise în acesta, nu vor mai fi. Atunci când un container este oprit, datele din sistemul de fișiere generat intern, vor dispărea (comportamentul din oficiu - OverlayFS).
 
 Din nefericire, datele din container nu pot fi mutate în alte locații ale sistemului de fișiere gazdă. Vorbim despre necesitatea de a beneficia de un mecanism care să asigure persistența datelor. Pentru că de cele mai multe ori vei avea nevoie de date persistente, cum ar fi loguri sau chiar bazele de date în anumite cazuri, Docker oferă *volume* care au un ciclu de viață separat de cel al containerelor și *bind mounts*. În cazul în care Docker funcționează pe o mașină Linux, poți folosi și `tmpfs mount` care vor rula în memorie. Pentru a scrie datele în layer-ul writable, este nevoie ca sistemul de fișiere să fie gestionat de un driver specializat - driver storage.
 
@@ -9,9 +9,10 @@ Din punctul de vedere al unui container, datele sunt văzute, fie ca un director
 ## tmpfs
 
 Această zonă de stocare a datelor se formează strict în memoria mașinii gazdă. Swarm-urile Docker folosesc tmpfs.
+
 ## Volume
 
-Un volum este un director asociat unui container în care se pot introduce date. Toate containerele pot folosi același volum. Volumele sunt păstrate chiar și în cazul în care containerul este șters din motive evidente de salvgardare a datelor. Volumele se creează în structura de directoare a locului unde este instalat Docker pe mașină: `/var/lib/docker/volumes/`. Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Ca administrator trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
+Un volum este un director asociat unui container în care se pot introduce date. Toate containerele pot folosi același volum. Volumele sunt păstrate chiar și în cazul în care containerul este șters. Motivul evident este de a păstra datele între repornirile containerelor. Volumele se creează în structura de directoare a locului unde este instalat Docker pe mașină: `/var/lib/docker/volumes/`. Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Ca administrator trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
 
 Pentru a vedea cum sunt gestionate volumele în imaginile oficiale, am ales [MariaDB latest](https://hub.docker.com/_/mariadb/tags) din Docker Hub. Unul din layere este dedicat: `VOLUME [/var/lib/mysql]`. În cazul în care vei rula acest container sau oricare altul care creează un volum, poți inspecta ce volume au fost create prin `docker volume ls`. De altfel, volumele apar și în momentul în care investighezi cum a fost configurat containerul folosind `docker container inspect`. În JSON-ul returnat vei vedea chiar unde este mapat volumul pe hard disk-ul mașinii gazdă. Dacă ai aflat care este hash-ul unui volum prin rularea lui `docker volume ls`, poți inspecta acel volum direct `docker volume inspect <hash>`. Reține faptul că volumele persistă după oprirea containerelor. Încă un lucru important este acela că în sistemele NIX (Linux/GNU și MacOS), de fapt containerele rulează într-o mașină virtuală rudimentară, ceea ce nu permite accesul direct la conținutul volumelor.
 
@@ -40,6 +41,17 @@ Volumele nu măresc dimensiunea containerelor care le folosesc pentru că pur ș
 Volumele pot fi numite sau anonime. Cele anonime sunt montate primele de container și li se dau un nume aleatoriu. Nu există nicio diferență de comportament între cele două. Volumele mai permit stocarea datelor pe mașini la distanță sau în cloud. Volumele sunt șterse numai când acest lucru este dorit înadins.
 
 Atunci când este nevoie să muți datele de pe o mașină gazdă pe alta, directorul în care se află volumele este cel care va fi mutat: `/var/lib/docker/volumes`.
+
+## Declararea volumelor în servicii
+
+Atunci când declari un volum pentru un anumit serviciu, trebuie trecut numele volumelor declarate și în lista secțiunii `volumes`.
+
+```yaml
+volumes:
+  mysql-date:
+  aplicatie-date:
+```
+
 ## Comportamente ale volumelor
 
 Dacă montezi un volum gol într-un director al containerului care este populat, fișierele și directoarele existente în acel director vor fi copiate în volumul gol. Pur și simplu se vor propaga și acolo.
@@ -112,9 +124,9 @@ docker volume inspect mariadb_vol1
 ]
 ```
 
-## Montarea volumelor în docker compose
+## Montarea volumelor în serviciile precizate de docker-compose.yml
 
-Nu monta în serviciile pe care le creezi căi către bazele de date din container. Performanțele vor fi oribile dacă vor funcționa astfel de legături. În astfel de cazuri, cel mai bine ar fi să fie folosite volume denumite (named volumes).
+Pentru a păstra datele între sesiunile de lucru cu un container cel mai bine ar fi să fie definite volume denumite (*named volumes*).
 
 ```yaml
 volumes:
@@ -130,7 +142,7 @@ volumes:
   - ./database:/var/lib/mysql:delegated
 ```
 
-Crearea unui volum denumit este necesară dacă dorești persistența datelor între sesiuni (`docker-compose up` / `down`).
+Crearea unui *volum denumit* (*named volume*) este necesară dacă dorești persistența datelor între sesiuni (`docker compose up` / `down`).
 
 ```yaml
 db:
@@ -156,7 +168,7 @@ volumes:
     driver: local
 ```
 
-## Creare volume particularizate
+## Creare de volume particularizate
 
 Uneori este nevoie să creezi un volum pe care să-l atașezi unui container. Pentru crearea volumelor vei folosi sub-comanda `volume create` înainte de a crea containerul propriu-zis. Crearea volumelor în acest mod permite specificarea driverelor în cazul în care acest lucru este necesar.
 
@@ -179,10 +191,10 @@ Pentru a avea o perspectivă privind volumele folosite de containere, se poate a
 Să presupunem că tot o aplicație web folosind Node.js dorim să dezvoltăm. Asta, de regulă necesită un director `/var/www` în care pui sursele.
 
 ```bash
-docker run -p 8080:3000 -v $(pwd):/var/www node
+docker run -p 8080:3000 -v $(pwd):/var/www node_image
 ```
 
-Unde `-v` specifică necesitarea configurării unui volum, `$(pwd):` specifică folosirea directorului de lucru în care se află consola în care va sta codul sursă și închei specificând volumul așa cum are nevoie containerului pentru a lucra cu sursele.
+Unde `-v` specifică necesitarea configurării unui volum, `$(pwd):` specifică folosirea directorului de lucru din care a fost rulată comanda, unde stă codul sursă și închei specificând volumul așa cum are nevoie containerului pentru a lucra cu sursele.
 
 ![Mounts](/images/2018/10/MountsVolume.png)
 
@@ -202,7 +214,7 @@ docker run -p 8080:3000 -v $(pwd):/var/wwww -w "/var/www" node npm start
 ## Bind mounts
 
 Aceste puncte de stocare a datelor se pot seta oriunde pe sistemul de operare gazdă. Au funcționalități reduse.
-Folosirea unui *bind mount* va monta un director sau un fișier specificat în containerul ales. Pe scurt, folosești locația unui fișier sau a unui director de pe mașina gazdă în container. *Bind mount* permite modificarea sistemului de fișiere al mașinii gazdă chiar din container.
+Folosirea unui *bind mount* va monta un director sau un fișier specificat în containerul ales. Pe scurt, folosești locația unui fișier sau a unui director de pe mașina gazdă în container. *Bind mount* permite modificarea sistemului de fișiere al mașinii gazdă chiar din container și vice-versa.
 
 ```bash
 ## Sincronizeaza directoarele de lucru folosind un volum bind mount
@@ -220,10 +232,10 @@ Fii foarte atent, pentru că în cazul în care ai o aplicație Node.js și de p
 
 ```bash
 ## La crearea imaginii adaugă volumul
-docker run -v $(pwd):/var/www/redcolector -v /var/www/redcolector/node_modules -p 8080:8080 -d name nume_container nume_imagine
+docker run -v $(pwd):/var/www/aplicatie -v /var/www/aplicatie/node_modules -p 8080:8080 -d name nume_container nume_imagine
 ```
 
-Acest al doilea *bind mount* se bazează pe faptul că aceste volume sunt montate în funcție de specificitatea lor. Al doilea va preveni suprascrierea directorului `node_modules` pentru că are o cale specifică acestuia. În continuare, vor fi sincronizate toate celelalte fișiere, dar nu și acest director. Putem spune că `-v /var/www/redcolector/node_modules` este un volum *anonim*.
+Acest al doilea *bind mount* se bazează pe faptul că aceste volume sunt montate în funcție de specificitatea lor. Al doilea va preveni suprascrierea directorului `node_modules` pentru că are o cale specifică acestuia. În continuare, vor fi sincronizate toate celelalte fișiere, dar nu și acest director. Putem spune că `-v /var/www/aplicatie/node_modules` este un volum *anonim*.
 
 Atenție, *bind mount*-ul este doar pentru procesul de development. Deci, copierea fișierelor în imagine este obligatorie, chiar dacă se face această oglindire la momentul în care containerul rulează. În cazul în care sunt create resurse (directoare, fișiere) în timp ce containerul rulează, acestea vor apărea automat și pe mașina gazdă. Deci, un *bind mount* este bidirecțional.
 

@@ -245,6 +245,7 @@ root                44243               44223               0                   
 systemd+            44299               44243               0                   12:57               ?                   00:00:00            nginx: worker process
 systemd+            44300               44243               0                   12:57               ?                   00:00:00            nginx: worker process
 ```
+
 ### Verificarea logurilor generate
 
 Putem verifica și logurile care se generează rulând sub-comanda `logs` precum în `docker container logs nume_container`.
@@ -305,7 +306,7 @@ docker container stop ec44e
 
 În acest moment containerul își încheie rularea și este returnat partea de id folosită în comanda de oprire. Pentru a reporni un container, pur și simplu rulezi `docker run nume_container`.
 
-Dacă nu știi cum ai numit containerele, introduci `docker container stop ` urmat de un TAB imediat după spațiul de după stop.
+Dacă nu știi cum ai numit containerele, introduci `docker container stop` urmat de un TAB imediat după spațiul de după stop.
 
 Oprirea unui container nu se va solda și cu ștergerea acestuia. Atunci când nu se intenționează modificarea containerelor create, cel mai bine este să le ștergem pentru a evita ocuparea inutilă a spațiului pe disc.
 
