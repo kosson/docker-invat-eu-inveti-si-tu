@@ -1,40 +1,14 @@
 # Docker compose
 
-Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Pentru a reuși acest lucru este folosit un fișier YAML în care sunt precizate toate serviciile și modul cum se configurează. Acest instrument poate fi folosit pentru dezvoltare locală.
+Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Pentru a reuși acest lucru este folosit un fișier YAML în care sunt precizate toate serviciile și modul cum se configurează.
 
 ## Fișierul `docker-compose.yml`
 
-Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul YAML Ain't Markup Language, fiind o structură de codare a informațiilor (serializare a datelor) bazată pe spațiere și pe linii, care țintește ușoara înțelegere de către oameni, dar și mașini. Mai multe detalii privind acest tip de fișiere la yaml.org. un posibil model este cel pe care îl jalonăm mai jos.
+Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul YAML Ain't Markup Language, fiind o structură de codare a informațiilor (serializare a datelor) bazată pe spațiere și pe linii, care țintește ușoara înțelegere de către oameni, dar și mașini. Mai multe detalii privind acest tip de fișiere la yaml.org.
 
-```yaml
-services:        # precizează containerele, având același comportament precum docker run
-  servicename:   # este un nume ales arbitrar, dar care va juca rol de adresă DNS în rețea
-    image:       # Dacă folosești build:
-    command:     # Dacă dorești să înlocuiești comanda CMD originală a imaginii, aici este locul
-    environment: # este locul unde menționezi variabilele de mediu (similar lui -e din docker run)
-      MYSQL_ROOT_PASSWORD: oParol4
-      ALTA_VAR_MEDIU: ceva
-    volumes:     # Este modul în care setezi volumul, fiind similar lui -v din docker run
-  servicenameX:  # Următorul serviciu definit
-volumes:         # Este similar cu docker volume create
-networks:        # Este similar lui docker network create
-```
+Acest fișier este folosit pentru configurarea serviciilor. De fapt ceea ce poți realiza este o orchestrare a mai multor containere Docker și pentru a crea legături între acestea. Acest fișier este prelucrat printr-un proces de `build`, din care va rezulta o imagine.
 
-Acest fișier este folosit pentru configurarea serviciilor. Observă faptul că pentru configurările care așteaptă o singură valoare numele cheilor sunt la singular, în vreme ce pentru cele care acceptă mai multe valori, numele cheilor sunt la plural. Privind scheletul de mai mai sus putem identifica un aspect particular. Pentru `environment` nu se va folosi o listă, ci perechile cheie:valoare sunt menționate fiecare pe o linie. La momentul în care va fi rulată comanda `docker compose` configurările de mediu vor fi pasate în container.
-
-De fapt ceea ce poți realiza este o orchestrare a mai multor containere Docker și pentru a crea legături între acestea. Acest fișier este prelucrat printr-un proces de `build`, din care va rezulta o imagine.
-
-Pentru o mai bună înțelegere, vom prelua mențiunile specificației [The Compose Specification](https://github.com/compose-spec/compose-spec/blob/master/spec.md) în care sunt lămurite următoarele aspecte:
-
-> Componentele care procesează datele asigurând computația sunt numite `services` (servicii). Un serviciu este un concept abstract a cărei implementare se realizează prin rularea imaginii unui container (cu tot cu propriile configurări) o dată sau de mai multe ori.
-> Serviciile comunică unele cu celelalte folosind `networks` (rețele). O rețea este o platformă care poate stabili rute IP între containerele serviciilor care sunt conectate unele cu celelalte.
-> Serviciile stochează și pune spre distribuire date persistente folosind `volumes` (volume).
-
-Pentru mai multe informații privind fișierele compose, se va accesa https://docs.docker.com/compose/compose-file/. Aici sunt menționate toate opțiunile posibile.
-
-## Versiunile compose
-
-În versiunile anterioare, fișierele de configurare se construiau după prescripțiile unei anumite versiuni. În acest moment, nu se va mai menționa vreo versiune în deschiderea fișierului `docker-compose.yml`. În secțiunea `services` sunt menționate cele care vor fi folosite: `node`, `mongodb`, etc. Mai jos este exemplul unui fișier care în versiunile anterioare menționa versiunea.
+Fișierele de configurare se construiesc după cerințele unei versiuni. Fișierele `docker-compose.yml` au la început menționată versiunea de fișier. În secțiunea `services` sunt menționate cele care vor fi folosite: `node`, `mongodb`, etc.
 
 ```yaml
 services:
@@ -98,7 +72,7 @@ Acest lucru este echivalentul creării unui volum mai întâi rulând `docker vo
 docker container run -d --name redis -v nume_dorit:/data --network reteaua_containerelor redis:alpine
 ```
 
-La fel se va petrece dacă este menționat locul de unde se va face maparea unui director de pe mașina gazdă în container. Acest lucru se realizează mai simplu prin introducerea directă în `docker-compose.yml`.
+Acest lucru se realizează mai simplu prin introducerea directă în `docker-compose.yml`.
 
 ```yaml
 services:
@@ -121,11 +95,11 @@ volumes:
 docker compose -f docker-compose.special.yml exec db bash
 ```
 
-## Utilitarul docker compose
+## Utilitarul docker compose drept CLI
 
-Utilitarul `docker compose` este cea mai bună soluție atunci când se face dezvoltare locală. Începând cu versiunea a doua a utilitarului `compose`, aplarea nu se mai face cu `docker-compose`, ci prin `docker compose`. Binarul `compose` este separat de `docker`. Reține faptul că este un instrument pentru dezvoltare locală. Nu este pentru mediile de producție.
+Utilitarul `docker compose` este cea mai bună soluție atunci când se face dezvoltare locală. Nu uita faptul că versiunea 2 a fișierul docker-compose.yml este cea mai potrivită pentru dezvoltare locală. În cazul în care nu folosești `swarm` sau `kubernetes`, cel mai bine este să folosești versiunea 2.
 
-Uneori ai nevoie să lansezi aplicațiile la momentul constituirii containerului prin rularea lui `docker compose run`.
+Uneori ai nevoie să lansezi aplicațiile la momentul constituirii containerului prin rularea lui `docker-compose run`.
 
 ```yaml
 services:
@@ -153,7 +127,7 @@ Uneori este nevoie de reconstruirea unui singur serviciu, de exemplu în cazul �
 Dacă ai modificat fișierul `Dockerfile` va trebui să faci un rebuild al imaginilor pentru a reflecta ultimele modificări. De exemplu, să instalezi un utilitar.
 Un posibil scenariu de rebuild este `docker compose up -d --build`.
 
-Pentru a reconstrui imaginile de fiecare dată, poți specifica `docker compose build --no-cache`. Flag-ul `--no-cache` ca curăța și va ține imaginile la o dimensiune cât mai redusă.
+Pentru a reconstrui imaginile de fiecare dată, poți specifica `docker compose build --no-cache`. Flag-ul `--no-cache` ca curăța și va ține imaginile la o dimensiune căt mai redusă.
 
 ### Comanda `docker compose up`
 
