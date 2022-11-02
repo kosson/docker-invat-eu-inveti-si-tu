@@ -249,7 +249,7 @@ De fiecare dată când deschizi un shell nou, trebuie să treci prin aceiași pa
 
 ## Folosirea lui cloud-init de la Ubuntu pentru a crea mașini cu Docker
 
-Pentru a crea mai multe mașini care să fie orchestrate prin diferite mijloace, de la Ubuntu ai la dispoziție `--cloud-init` care folosește un fișier de configurare YAML în care precizezi ce trebuie să fie instalat pe mașina virtuală pe care dorești să o creezi.
+Pentru a crea mai multe mașini care să fie orchestrate prin diferite mijloace, de la Ubuntu ai la dispoziție `--cloud-init` care folosește un fișier de configurare YAML în care precizezi ce trebuie să fie instalat pe mașina virtuală pe care dorești să o creezi. Instalează pe mașina gazdă (Ubuntu) multipass. Creează un fișier de configurare care să fie folosit de `--cloud-init`.
 
 ```yaml
 runcmd:
@@ -359,7 +359,7 @@ verify: Service converged
 Pentru a opri serviciul: `docker service rm l3m9w0v08qlnpjnoakuot6q6e0` care va returna id-ul după ce îl va opri.
 
 Acum, din mașina gazdă, accesezi cu browserul IP-ul mașinii virtuale și ar trebui să ai mesajul standard de întâmpinare pentru NGINX.
-Pentru a opri mașinile virtuale: `multipass stop primobuntu` ș.a.m.d. 
+Pentru a opri mașinile virtuale: `multipass stop primobuntu` ș.a.m.d. Pentru a promova un node la rang de manager este simplu folosind comanda `docker node update --role`.
 
 ## Rulează aplicația pe swarm
 
