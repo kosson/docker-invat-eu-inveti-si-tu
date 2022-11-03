@@ -219,7 +219,7 @@ Acest driver elimină barierele de comunicare dintre container și sistemul de o
 
 ### overlay
 
-Rețelele overlay conectează daemonii Docker, permițând comunicare între servicii în cazul în care se folosește un swarm. Poți folosi rețele overlay pentru a ușura comunicarea dintre un serviciu swarm și un container de sine stătător sau între două containere dar care rulează pe doi daemoni Docker diferiți. Această strategie elemină necesitatea de a folosi rutarea între containere, care se realizează la nivel de OS.
+Rețelele overlay conectează daemonii Docker, permițând comunicare între servicii în cazul în care se folosește un swarm. Poți folosi rețele overlay pentru a ușura comunicarea dintre un serviciu swarm și un container de sine stătător sau între două containere dar care rulează pe doi daemoni Docker diferiți. Această strategie elimină necesitatea de a folosi rutarea între containere, care se realizează la nivel de OS.
 
 ### macvlan
 
