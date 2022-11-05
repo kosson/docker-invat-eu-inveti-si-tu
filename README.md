@@ -1,6 +1,6 @@
 # docker-invat-eu-inveti-si-tu
 
-Resurse de învățare pentru Docker. Materialele reflect experineța de lucru și efortul de a înțelege Docker. Conținuturile preiau informații din site-urile documentației Docker. Multe dintre exemple și explicații sunt preluate din materialele de instruire pe care Bret Fisher (https://www.bretfisher.com/) le-a creat pentru Udemy și Youtube (https://www.youtube.com/c/BretFisherDockerandDevOps).
+Resurse de învățare pentru Docker. Materialele reflect experiența de lucru și efortul de a înțelege Docker. Conținuturile preiau informații din site-urile documentației Docker. Multe dintre exemple și explicații sunt preluate din materialele de instruire pe care Bret Fisher (https://www.bretfisher.com/) le-a creat pentru Udemy și Youtube (https://www.youtube.com/c/BretFisherDockerandDevOps).
 
 Aceste texte nu sunt definitive modificându-se ca formă și conținut într-o continuă îmbunătățire pe măsură ce timpul o va permite.
 
