@@ -2,7 +2,7 @@
 
 ## Preliminarii
 
-Pentru orice eventualitate, deja există o [imagine Node](https://hub.docker.com/_/node) care poate fi utilizată în caz de necesitate (`docker pull node`). Reține faptul că o aplicație într-un container va funcționa întotdeauna sub `root`, ceea ce prezintă riscuri de securitate. Din acest motiv, este necesar să rulăm aplicațiile sub un user creat.
+Pentru orice eventualitate, deja există o [imagine Node](https://hub.docker.com/_/node) care poate fi utilizată în caz de necesitate (`docker pull node`). Reține faptul că o aplicație într-un container va funcționa întotdeauna sub `root`, ceea ce prezintă riscuri de securitate. Din acest motiv, este necesar să rulăm aplicațiile sub un user creat. Imaginea de node oficială creează userul node.
 
 ```yaml
 USER node
@@ -13,8 +13,12 @@ După ce ai declarat userul `node`, toate comenzile vor rula sub auspiciile lui 
 Comenzile RUN, CMD și ENTRYPOINT vor putea fi rulate sub userul `node`. Pentru restul cazurilor poți folosi un combo cu `chown`:
 
 ```yaml
-RUN mkdir app && chown -R node:node .
+RUN mkdir /app && chown -R node:node /app
+WORKDIR /app
+USER node
 ```
+
+Aceasta este un fragment împrumutat din experiența dobândită de Bret Fisher în cazul în care îți construiești propria imagine de Node.js.
 
 Dacă dorești să execuți comenzi în container ca utilizatorul `root`, vei putea lansa o comandă `docker-compose exec -u root`. Acest lucru se poate dovedi foarte util dacă dorești să actualizezi dependințe sau să instalezi altele. Acest lucru se poate face doar ca `root`.
 
@@ -28,110 +32,137 @@ De exemplu, când vei copia fișierele aplicației în directorul creat, vei fac
 Reguli:
 
 - fișierul `Dockerfile` este citit linie cu linie de sus în jos;
-- atunci când reface o imagine, de fiecare dată când `docker` întâlnește o linie modificată în `Dockerfile`, va reconstrui tot ce este sub linia modificată.
+- atunci când reface o imagine, de fiecare dată când `docker` întâlnește o linie modificată în `Dockerfile`, va reconstrui tot ce este sub linia modificată. În concluzie, pune instrucțiunile care se modifică cel mai rar primele pentru ca acele straturi să nu fie reconstruite.
 
-Alege foarte atent sistemul de operare de la `FROM`. O bună obișnuiță spune să arunci un ochi peste imaginea pe care o vei folosi drept bază direct la sursă în Docker hub pentru a fi avizat în ceea ce privește pachetele care sunt instalate din oficiu. Mai jos este exemplificată o secvență de pași pentru a rula o aplicație Node.js în Doceker.
+Alege foarte atent sistemul de operare de la `FROM`. O bună obișnuiță spune să arunci un ochi peste imaginea pe care o vei folosi drept bază direct la sursă în Docker hub pentru a fi avizat în ceea ce privește pachetele care sunt instalate din oficiu. Mai jos este exemplificată o secvență de pași pentru a rula o aplicație Node.js în Docker.
 Pune `EXPOSE număr_port` cât mai sus pentru că această directivă nu se va modifica prea des pentru respectiva aplicație. Copiază mai întâi `package.json` și lock file-ul și imediat rulează instalarea dependințelor.
 
 ```yaml
-FROM node:19-alpine
+FROM node:19-bullseye-slim
+# înlocuiește npm cu tini
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    tini \
+    && rm -rf /var/lib/apt/lists/*
+ENTRYPOINT ["/usr/bin/tini", "--"]
 EXPOSE 3000
-RUN apk add --no-cache tini
-ENTRYPOINT ["/sbin/tini", "--"]
-RUN mkdir -p /var/www/test
+# contruiește manual calea cu drepturile necesare
+RUN mkdir -p /var/www/test && chown -R node:node /var/www/test
 WORKDIR /var/www/test
-COPY package.json package-lock.json* ./
-RUN npm install && npm cache clean --force
-COPY . .
+USER node
+COPY --chown=node:node package*.json package-lock.json* ./
+RUN npm ci --only=production --omit=dev && npm cache clean --force
+COPY --chown=node:node . /var/www/test
+# Nu folosi npm în containere pentru cu nu poate gestiona semnale
 CMD ["node", "index.js"]    
+```
+
+Un set complet al pașilor poate fi similar cu următorul. Observă că am adăugat `-omit=dev` pentru a elimina orice posibilă utilizare a pachetelor pentru dezvoltare.
+
+```text
+docker build -t test_node_19_bullseye .
+Sending build context to Docker daemon  6.656kB
+Step 1/11 : FROM node:19-bullseye-slim
+ ---> bc61eaf3a075
+Step 2/11 : RUN apt-get update     && apt-get install -y --no-install-recommends     tini     && rm -rf /var/lib/apt/lists/*
+ ---> Using cache
+ ---> 697320515cb9
+Step 3/11 : ENTRYPOINT ["/usr/bin/tini", "--"]
+ ---> Using cache
+ ---> aea79a20a5a2
+Step 4/11 : EXPOSE 3000
+ ---> Using cache
+ ---> a5192a74997a
+Step 5/11 : RUN mkdir -p /var/www/test && chown -R node:node /var/www/test
+ ---> Using cache
+ ---> 60cb1df67885
+Step 6/11 : WORKDIR /var/www/test
+ ---> Using cache
+ ---> f5fc52b8f785
+Step 7/11 : USER node
+ ---> Using cache
+ ---> 7360340011f2
+Step 8/11 : COPY --chown=node:node package*.json package-lock.json* ./
+ ---> Using cache
+ ---> 72efc5956a8d
+Step 9/11 : RUN npm ci --only=production && npm cache clean --force
+ ---> Using cache
+ ---> e161b65a42ee
+Step 10/11 : COPY --chown=node:node . .
+ ---> Using cache
+ ---> e72eb4dd51c6
+Step 11/11 : CMD ["node", "index.js"]
+ ---> Using cache
+ ---> 23f88b99d393
+Successfully built 23f88b99d393
+Successfully tagged test_node_19_bullseye:latest
 ```
 
 Asterixul din `package-lock.json*` cere lui `docker` să copieze fișierul dacă acesta există, dar dacă nu, să nu dea eroare (directorul curent menționat prin `./` care este `WORKDIR`). Mai există varianta de a pune un asterix doar după package, precum în `COPY package*.json ./`, directivă care ar conduce la copierea ambelor fișiere.
 
-În ceea ce privește instalarea pachetelor cu `npm`, în momentul în care faci o imagine de producție, instalează cu `RUN npm ci --only=production`. Comanda [npm ci](https://blog.npmjs.org/post/171556855892/introducing-npm-ci-for-faster-more-reliable), trece peste `package.json` și instalează pachetele din `package-lock.json`. Astfel, ne putem baza pe același rezultat privind versiunile pachetelor instalate.
+În ceea ce privește instalarea pachetelor cu `npm`, în momentul în care faci o imagine de producție, instalează cu `RUN npm ci --only=production`. Comanda [npm ci](https://blog.npmjs.org/post/171556855892/introducing-npm-ci-for-faster-more-reliable), trece peste `package.json` și instalează pachetele din `package-lock.json`. Astfel, ne putem baza pe același rezultat privind versiunile pachetelor instalate fără teama că npm va instala versiuni ale pachetelor pe care nu le dorim.
 
-Atunci când construiești imaginea, fii atent să nu permiți copierea directorul `node_modules` în imagine. Pentru a realiza acest lucru, vei construi un fișier `.dockerignore` (https://docs.docker.com/engine/reference/builder/#dockerignore-file).
+Atunci când construiești imaginea, fii atent să nu permiți copierea directorul `node_modules` în imagine. Pentru a realiza acest lucru, vei scrie un fișier `.dockerignore` (https://docs.docker.com/engine/reference/builder/#dockerignore-file).
 
 ```text
 node_modules
 npm-debug.log
 ```
 
-Pentru a construi imaginea rapid: `docker build -t test4node .`. Apoi un run rapid cu `docker container run -rm -p 80:3000 test4node`. Rezultatul va fi o imagine care s-a contruit în pași similari cu următorii.
+Pentru a construi imaginea rapid: `docker build -t test4node .`. Apoi un run rapid cu `docker container run -rm -p 80:3000 test4node` (`rm` este pentru a rula o singur dată aplicația și apoi pentru a șterge imaginea). Rezultatul va fi o imagine nouă cu numele ales drept tag. După cum se observă mai jos, construcția imaginii a eșuat pentru că nu există *package-lock.json*. Mai întâi trebuie instalată aplicația local (`npm install`). În acest moment este disponibil și *package-lock.json*.
 
 ```text
-Sending build context to Docker daemon   5.12kB
-Step 1/10 : FROM node:19-alpine
-19-alpine: Pulling from library/node
-Digest: sha256:bdd47da7e6d246549db69891f5865d82dfc9961eae897197d85a030f254980b1
-Status: Image is up to date for node:19-alpine
- ---> 15f69295346c
-Step 2/10 : EXPOSE 3000
- ---> Using cache
- ---> 3a14d88902d7
-Step 3/10 : RUN apk add --no-cache tini
- ---> Running in 1295823a5840
-fetch https://dl-cdn.alpinelinux.org/alpine/v3.16/main/x86_64/APKINDEX.tar.gz
-fetch https://dl-cdn.alpinelinux.org/alpine/v3.16/community/x86_64/APKINDEX.tar.gz
-(1/1) Installing tini (0.19.0-r0)
-Executing busybox-1.35.0-r17.trigger
-OK: 8 MiB in 17 packages
-Removing intermediate container 1295823a5840
- ---> 4d37de060200
-Step 4/10 : ENTRYPOINT ["/sbin/tini", "--"]
- ---> Running in 58500f814dd3
-Removing intermediate container 58500f814dd3
- ---> 5f9fb4cf7943
-Step 5/10 : RUN mkdir -p /var/www/test
- ---> Running in e67118bf8a78
-Removing intermediate container e67118bf8a78
- ---> 59a60c5e54d9
-Step 6/10 : WORKDIR /var/www/test
- ---> Running in 949c8692a5f1
-Removing intermediate container 949c8692a5f1
- ---> dac5483d94c4
-Step 7/10 : COPY package.json package-lock.json* ./
- ---> c819312992ec
-Step 8/10 : RUN npm install && npm cache clean --force
- ---> Running in 122a4bef7690
+Step 8/11 : COPY --chown=node:node package*.json package-lock.json* ./
+ ---> bc3cce577655
+Step 9/11 : RUN npm ci --only=production && npm cache clean --force
+ ---> Running in c4177603736d
+npm WARN config only Use `--omit=dev` to omit dev dependencies from the install.
+npm ERR! code EUSAGE
+npm ERR! 
+npm ERR! The `npm ci` command can only install with an existing package-lock.json or
+npm ERR! npm-shrinkwrap.json with lockfileVersion >= 1. Run an install with npm@5 or
+npm ERR! later to generate a package-lock.json file, then try again.
+npm ERR! 
+npm ERR! Clean install a project
+npm ERR! 
+npm ERR! Usage:
+npm ERR! npm ci
+npm ERR! 
+npm ERR! Options:
+npm ERR! [-S|--save|--no-save|--save-prod|--save-dev|--save-optional|--save-peer|--save-bundle]
+npm ERR! [-E|--save-exact] [-g|--global] [--global-style] [--legacy-bundling]
+npm ERR! [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+npm ERR! [--strict-peer-deps] [--no-package-lock] [--foreground-scripts]
+npm ERR! [--ignore-scripts] [--no-audit] [--no-bin-links] [--no-fund] [--dry-run]
+npm ERR! [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+npm ERR! [-ws|--workspaces] [--include-workspace-root] [--install-links]
+npm ERR! 
+npm ERR! aliases: clean-install, ic, install-clean, isntall-clean
+npm ERR! 
+npm ERR! Run "npm help ci" for more info
 
-up to date, audited 1 package in 256ms
-
-found 0 vulnerabilities
-npm WARN using --force Recommended protections disabled.
-Removing intermediate container 122a4bef7690
- ---> b960b6699ded
-Step 9/10 : COPY . .
- ---> 14600b7f0c9e
-Step 10/10 : CMD ["node", "index.js"]
- ---> Running in fa3512f2e7ea
-Removing intermediate container fa3512f2e7ea
- ---> b5f8d32e2899
-Successfully built b5f8d32e2899
-Successfully tagged test4node:latest
+npm ERR! A complete log of this run can be found in:
+npm ERR!     /home/node/.npm/_logs/2022-11-05T08_03_21_742Z-debug-0.log
 ```
 
-Toate imaginile Node au un utilizator `node` care este inactiv până când nu menționezi directiva `USER node`. Activează acest utilizator pentru ca toate directivele `RUN` să ruleze sub acest utilizator.
+Toate imaginile Node.js au un utilizator `node` care este inactiv până când nu menționezi directiva `USER node`. Activează acest utilizator pentru ca toate directivele `RUN` să ruleze sub acest utilizator.
 
-```yaml
-FROM node:14.4.0-slim
-EXPOSE 8080
-RUN mkdir /var/www/kolektor && chown -R node:node /var/www/kolektor
-WORKDIR /var/www/kolektor
-USER node
-COPY --chown=node:node package.json package-lock*.json ./
-RUN npm install && npm cache clean --force
-COPY --chown=node:node . .
-CMD ["npm", "start"]
-```
-
-Nu folosi `npm start` în containere așa cum este în exemplu. Este considerat a fi un mod de lucru problematic. Rulează aplicațiile direct cu `node` în containere. Din nefericire `npm` nu pasează semnalele corect către `node`.
+Nu folosi `npm start` în containere pentru că npm nu gestionează corect semnalele. Rulează aplicațiile direct cu `node` în containere. Din nefericire `npm` nu pasează semnalele corect către și dinspre `node`.
 
 ```yaml
 CMD ["node", "app.js"]
 ```
 
 Dacă ești mulțumit cu setările, construiește imaginea cu `docker buid -t nume_utilizator_dockerhub/nume_aplicație .`. După construcția imaginii, o poți testa cu `docker run -p numar_port_extern:numar_port_aplicație -d nume_utilizator_dockerhub/nume_aplicație`.
+
+```text
+docker images
+
+REPOSITORY                  TAG                IMAGE ID       CREATED         SIZE
+test_node_19_bullseye       latest             23f88b99d393   3 minutes ago   245MB
+```
+
+Pentru un test rapid, rulează aplicația cu `docker container run -p 80:3000 test_node_19_bullseye` și verifică în browser pe localhost:80.
 
 Vezi care este containerul care rulează aplicația cu `docker ps` și la nevoie poți afișa log-urile aplicației cu `docker logs număr_container`. Dacă ai nevoie să accesezi consola containerului deschide o sesiune cu `docker exec -it număr_container /bin/bash`. Dacă dorești să testezi aplicația, poți trimite de test o cerere similară cu `curl -i localhost:numar_port_extern`.
 

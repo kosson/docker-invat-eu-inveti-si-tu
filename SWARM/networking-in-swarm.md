@@ -14,7 +14,7 @@ Dacă investighezi ce rețele sunt create folosind `docker network ls`, vei obse
 
 ## Routing mesh
 
-Dacă într-o configurație de swarm ai trei workeri pentru o aplicație web, de exemplu, vei putea accesa aplicația aplelând-o din browser cu oricare dintre IP-urile pe care le au workerii. Acest lucru este posibil pentru că routarea pachetelor se face printr-un mecanism de load balancing care folosește niște primitive ale kernelui de Linux numite IPVS (IP Virtual Server).
+Dacă într-o configurație de swarm ai trei workeri pentru o aplicație web, de exemplu, vei putea accesa aplicația apelând-o din browser cu oricare dintre IP-urile pe care le au workerii. Acest lucru este posibil pentru că routarea pachetelor se face printr-un mecanism de load balancing care folosește niște primitive ale kernelui de Linux numite IPVS (IP Virtual Server).
 
 În cazul în care ai avea două servere de baze de date în rețeaua virtuală a unui serviciu (deci două replici), comunicarea între containerul aplicației care are nevoie de date din acestea, le-ar obține prin intermediul rutării cererii printr-un Virtual IP (pe care îl pune swarm-ul) ca punct de acces în rețeaua virtuală a serviciului și apoi printr-un load balancing ar trimite cererea către o instanță (un worker poate avea mai multe containere). Este cazul comunicării unui serviciu din rețeaua virtuală cu un altul (comunicarea între noduri).
 

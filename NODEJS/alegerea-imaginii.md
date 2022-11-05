@@ -9,3 +9,4 @@ FROM node:16.1-alpine3.13
 ## Resurse
 
 - https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/NodeJS_Docker_Cheat_Sheet.md
+- [Node.js Rocks in Docker, DockerCon 2022 Edition | Bret Fisher | 2022](https://youtu.be/Z0lpNSC1KbM)

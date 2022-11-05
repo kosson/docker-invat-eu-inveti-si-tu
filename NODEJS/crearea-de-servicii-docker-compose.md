@@ -1,4 +1,4 @@
-## Crearea unor servicii
+# Crearea unor servicii
 
 Aflându-te în directorul de dezvoltare al aplicației Node.js, creează un fișier `.dockerignore` în care specifici care dintre directoare/fișiere nu dorești să ajungă în container.
 
