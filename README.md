@@ -21,10 +21,3 @@ Dacă ați găsit utile materialele, puteți sprijini folosind următoarele cana
 - o cafeluță direct pe Revolut la [@nicolaemn](https://revolut.me/nicolaemn) 
 
 <img src="img/REVOLUT_QR.png" height="200" />
-
-## Suport
-
-Dacă ați găsit utile materialele, puteți sprijini folosind următoarele canale:
-
-Donații ETH: 0xd4e9e977c4ae9387061ab8f7160666b5c1dc2a2d
-Donații BTC: 1TCT7wcnD5a4sSKnBkudSvc9DMUd9nbLa
