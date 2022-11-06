@@ -440,3 +440,4 @@ sudo service docker start
 - [Multipass for Fast Linux VM's!](https://www.pscp.tv/BretFisher/1mrGmQvNEWBGy)
 - [Ubuntu VMs on demand for any workstation](https://multipass.run/)
 - [cloud-init Documentation](https://cloudinit.readthedocs.io/en/latest/)
+- [Only one host for production environment. What to use: docker-compose or single node swarm?](https://github.com/BretFisher/ama/discussions/146)

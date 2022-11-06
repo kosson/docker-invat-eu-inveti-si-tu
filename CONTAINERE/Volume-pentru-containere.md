@@ -133,7 +133,7 @@ volumes:
   - ./database:/var/lib/mysql
 ```
 
-O astfel de definire funcționează pe sistemele Linux fără a întâmpina nicio problemă. Totuși, folosirea unui asfel de *bind-mount* și inițierea infrastructurii pe un sistem Windows sau MacOS, nu va funcționa. Portabilitatea nu se va putea realiza.
+O astfel de definire funcționează pe sistemele Linux fără a întâmpina nicio problemă. Totuși, folosirea unui asfel de *bind-mount* și inițierea infrastructurii pe un sistem Windows sau MacOS, nu va funcționa. Portabilitatea nu se va putea realiza. Marca sintactică a unui *bind-mount* este slash-ul.
 
 În cazul [MacOS](https://docs.docker.com/docker-for-mac/osxfs-caching/), fanionul pentru delegarea scrierilor este poziționat cu scopul de a-i spune lui Docker că în cazul în care apare scriere de fișiere în container, mecanismele de gestiune a fișierelor din container li se permite să se miște mai repede decât cele ale mașinii host. Mașina host, va ține pasul mai târziu. Gândește-te la operațiuni consumatoare de astfel de resurse cum ar fi instalările pachetelor cu npm sau faci o transformare de fișiere.
 

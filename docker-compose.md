@@ -1,6 +1,6 @@
 # Docker compose
 
-Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Pentru a reuși acest lucru este folosit un fișier YAML în care sunt precizate toate serviciile și modul cum se configurează.
+Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Docker compose nu a fost creat pentru a fi folosit în producție, ci doar pentru development. Pentru a compune serviciile este folosit un fișier YAML în care sunt precizate toate și modul cum se configurează.
 
 ## Fișierul `docker-compose.yml`
 
@@ -56,7 +56,7 @@ Când ai terminat de adăugat toate componentele, se va folosi comanda `docker-c
 
 Versiunea 3 nu va înlocui versiunea 2. Versiunea 2 a fișierului este focalizată pe noduri unice folosite pentru dezvoltare sau testare. Versiunea 3 se focalizează mai mult pe orchestrarea multi-node. Este recomandabil ca în cazul în care nu este folosit Kubernetes sau Swarm, folosește versiunea 2, care este actualizată continuu.
 
-Versiunea de lucru care trebuie specificată pentru fișierul `docker-compose.yml` este importantă pentru că sunt diferite interpretări ale directivelor de pe fiecare linie în funcție de versiunea de `docker compose` care este instalată odată cu Docker. Începând cu Docker 18.06.0+ este indicat ca versiunea folosită să fie 3.7. 
+Versiunea de lucru care trebuie specificată pentru fișierul `docker-compose.yml` este importantă pentru că sunt diferite interpretări ale directivelor de pe fiecare linie în funcție de versiunea de `docker compose` care este instalată odată cu Docker. Începând cu Docker 18.06.0+ este indicat ca versiunea folosită să fie 3.7.
 
 Mai nou, pentru versiunile mai noi ale lui `docker` (peste 20) nici nu mai este nevoie să specifici versiunea de fișier.
 
@@ -162,6 +162,7 @@ Oprești containerele din construcția `docker-compose.yml`. Este folosită pent
 ```bash
 docker compose down --rmi all --volumes
 ```
+
 #### Distrugerea volumelor
 
 În cazul în care nu mai ai nevoie de volumele asociate, poți să le ștergi adăugând `-v` comenzii.

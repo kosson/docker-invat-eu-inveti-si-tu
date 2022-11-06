@@ -57,3 +57,4 @@ Nivelul codului sursÄƒ este creat cu scopul de a folosi nivelurile codului sursÄ
 ## Resurse
 
 - [Node.js Rocks in Docker, DockerCon 2022 Edition | Bret Fisher | 2022](https://youtu.be/Z0lpNSC1KbM)
+- [Only one host for production environment. What to use: docker-compose or single node swarm?](https://github.com/BretFisher/ama/discussions/146
