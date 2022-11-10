@@ -27,4 +27,25 @@ docker service create --name psql --secret psql_user --secret psql_pass \
                     postgres
 ```
 
-Pentru a șterge secretele ai la îndemână comanda `docker service update --secret-rm`. Dacă ștergi creun secret, se va fac automat une redeplyment de container. Reține faptul că eliminarea unui secret conduce la oprirea containerului urmată de crearea și pornirea unuia nou.
+Pentru a șterge secretele ai la îndemână comanda `docker service update --secret-rm`. Dacă ștergi creun secret, se va fac automat une redeployment de container. Reține faptul că eliminarea unui secret conduce la oprirea containerului urmată de crearea și pornirea unuia nou.
+
+Secretele pot fi create și în swarm stacks. Observă faptul că toate secretele au fost definite la finalul fișierului și apoi atribuite serviciilor care au nevoie de acestea.
+
+```yml
+services:
+  psql:
+    image: postgres
+    secrets:
+      - psql_user
+      - psql_password
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/psql_password
+      POSTGRES_USER_FILE: /run/secrets/psql_user
+secrets:
+  psql_user:
+    file: ./psql_user.txt
+  psql_password:
+    file: ./psql_password.txt
+```
+
+Apoi folosești `docker stack deploy -c docker-compose.yml nume_stack`. După crearea containerelor poți investiga secretele create cu `docker secret ls`. La momentul în care se elimină stiva cu `docker stack rm nume_stack` vor fi eliminate și secretele.
