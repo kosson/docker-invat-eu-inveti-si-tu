@@ -15,3 +15,11 @@ Pod-urile sunt unitățile de bază dintr-un sistem Kubernetes. Containerele rul
 Kubernetes oferă și servicii care sunt mijlocul prin care ne conectăm la un pod.
 
 Mai există un concept de lucru important numit *namespaces*, care este un filtru (filtrare de views în lucrul cu CLI) ce poți să-l aplici cu scopul de a grupa obiectele dintr-un cluster.
+
+## Crearea pod-urilor
+
+Există trei comenzi cu ajutorul cărora poți crea pod-uri folosind CLI-ul *kubectl* în Kubernetes:
+
+- `kubectl run` care pare similar lui `docker run`;
+- `kubectl create` care pare similar lui `docker create` din swarm;
+- `kubectl apply` similar unui stack deploy;
