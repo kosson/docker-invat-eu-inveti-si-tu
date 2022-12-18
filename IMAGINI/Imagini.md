@@ -62,7 +62,7 @@ Imediat după commit, imaginea va apărea printre cele deja existente și este g
 #### Pasul 1 - scrierea fișierului Dockerfile
 
 Acest fișier este responsabil de construcția imaginii. Fiecare linie dintr-un fișier `Dockerfile` este constituit din instrucțiuni urmate de câte o declarație.
-Fiecare instrucțiune creează câte un nivel al imaginii atunci când este generată imaginea.
+Fiecare instrucțiune creează câte un nivel (*layer*) al imaginii atunci când este generată imaginea. Docker va face ceva foarte interesant cu fiecare nivel. Pur și simplu va face un caching (scrie un fișier pe disc pentru fiecare modificare pe care o aduce instrucțiunea). Acest *caching* evită scrierea unui alt fișier dacă respectiva linie a instrucțiunii nu s-a modificat. Reține faptul că în cazul unei modificări, începând cu acea linie, se vor rescrie toate fișirele pe disc. Din acest motiv, o bună strategie ar fi să pui cât mai spre final liniile care au potențial să se modifice mai des.
 
 Un exemplu foarte simplu este:
 
@@ -267,3 +267,4 @@ docker images | grep none | tr -s ' ' | cut -d ' ' -f 3 | xargs -I {} docker rmi
 
 - [Handle Docker Images Like A Pro | Mohammad Faisal](https://medium.com/javascript-in-plain-english/delete-docker-images-like-a-pro-a8fece854ec8)
 - [Dockerfile reference](https://docs.docker.com/engine/reference/builder/)
+- [Top 8 Docker Best Practices for using Docker in Production](https://youtu.be/8vXoMqWgbQQ)
