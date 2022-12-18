@@ -10,3 +10,4 @@ FROM node:16.1-alpine3.13
 
 - https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/NodeJS_Docker_Cheat_Sheet.md
 - [Node.js Rocks in Docker, DockerCon 2022 Edition | Bret Fisher | 2022](https://youtu.be/Z0lpNSC1KbM)
+- [Top 8 Docker Best Practices for using Docker in Production | TechWorld with Nana](https://youtu.be/8vXoMqWgbQQ)
