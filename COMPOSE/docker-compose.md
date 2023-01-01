@@ -64,7 +64,7 @@ Mai nou, pentru versiunile mai noi ale lui `docker` (peste 20) nici nu mai este 
 
 ### Gestionarea volumelor
 
-În cazul în care dorești ca un volum să fie cunoscut după un nume date de tine, dar să fie legat de un director din imagine, acest lucru trebuie menționat în fișierul `docker-compose.yml` în mod explicit.
+În cazul în care dorești ca un volum să fie cunoscut după un nume date de tine, dar să fie legat de un director din imagine, acest lucru trebuie menționat în fișierul `docker-compose.yml` în mod explicit (*named volume* sau *bind volume*).
 
 Acest lucru este echivalentul creării unui volum mai întâi rulând `docker volume create volume nume_dorit_al_volumului`, urmat de atașarea volumului la container. Locul unde se va opera cu directorul legat de container, va fi cel de unde se va executa comanda `docker container`.
 
@@ -121,8 +121,9 @@ La rețele, au fost menționate două. Cea de `front-end`, care va expune portur
 
 ### Comanda `docker compose build`
 
+În cazul în care contrucția pe care o inițiezi este una complexă cu mai multe niveluri pentru fiecare serviciu, cu variabile de mediu, etc., este la îndemână să folosești comanda `docker compose build`.
 Este comanda care va construi întreg eșafodajul de imagini cu sau fără particularizări, volume, driverele de rețea și rețelele folosite de viitoarele containere. Este folosită pentru build-uri și rebuild-uri.
-Uneori este nevoie de reconstruirea unui singur serviciu, de exemplu în cazul în care dorești o imagine actualizată de pe Docker Hub. În acest caz poți aplica `docker-compose build nume_serviciu` pentru a reconstrui unul singur.
+Uneori este nevoie de reconstruirea unui singur serviciu, de exemplu în cazul în care dorești o imagine actualizată de pe Docker Hub. În acest caz poți aplica `docker compose build nume_serviciu` pentru a reconstrui unul singur.
 
 Dacă ai modificat fișierul `Dockerfile` va trebui să faci un rebuild al imaginilor pentru a reflecta ultimele modificări. De exemplu, să instalezi un utilitar.
 Un posibil scenariu de rebuild este `docker compose up -d --build`.
@@ -131,7 +132,7 @@ Pentru a reconstrui imaginile de fiecare dată, poți specifica `docker compose 
 
 ### Comanda `docker compose up`
 
-Este comanda care pornește containerele. Util ar fi să rulezi comanda `detached`: `docker compose up -d`. Mai sunt cazuri în care poate dorești pornirea unui singur serviciu din toate cele pe care le-ai menționat în `docker-compose.yml`.
+Este comanda care pornește containerele. Util ar fi să rulezi comanda `detached`, precum în `docker compose up -d`. Mai sunt cazuri în care poate dorești pornirea unui singur serviciu din toate cele pe care le-ai menționat în `docker-compose.yml`.
 
 ```bash
 docker compose up --no-deps node
@@ -157,11 +158,13 @@ Această comandă va forța reconstrucția imaginilor pentru care se *ridică* c
 
 ### Comanda `docker compose down`
 
-Oprești containerele din construcția `docker-compose.yml`. Este folosită pentru momentul în care ai nevoie de a opri toate containerele din varii motive. Dacă vrei să oprești containerele și să distrugi și imaginile, poți apela la opțiunea `--rmi all`. Dacă nici volumele în care persiști datele nu mai dorești să le păstrezi, vei menționa și opțiunea `--volumes` (sau `-v`).
+Oprești containerele din construcția `docker-compose.yml`. Este folosită pentru momentul în care ai nevoie de a opri toate containerele din varii motive. Dacă vrei să oprești containerele și să distrugi și imaginile, poți apela la opțiunea `--rmi all`. Dacă nu mai dorești să păstrezi nici volumele în care persiști datele, menționează și opțiunea `--volumes` (sau `-v`).
 
 ```bash
 docker compose down --rmi all --volumes
 ```
+
+Un lucru important pe care ai nevoie să-l reții este acela că atunci când oprești containerele unui compose, va fi desființată și rețeaua de comunicare dintre containerele care compun serviciile. La emiterea comenzii `up`, rețelele vor fi recreate.
 
 #### Distrugerea volumelor
 
@@ -177,7 +180,7 @@ Drept regulă, dacă ai date care persistă, nu opri containerele cu opțiunea `
 
 ### Comanda `docker compose logs`
 
-Oferă accesul la istoric. Log-urile le poți consulta pentru toate serviciile definite în `dockerfile`, precum în `docker compose log web`. Pentru toate serviciile, lansezi o comandă `docker compose log`.
+Comanda afișează log-urile tuturor containerelor. Log-urile le poți consulta pentru toate serviciile definite în `dockerfile`, precum în `docker compose log web`. Pentru toate serviciile, lansezi o comandă `docker compose log`.
 
 ### Comanda `docker compose ps`
 
@@ -196,14 +199,6 @@ sample-02_web_1   docker-entrypoint.sh node  ...   Up      0.0.0.0:3000->3000/tc
 Această comandă oprește containerele, nu le șterge.
 
 ### Comanda `docker compose start`
-
-### Comanda `docker compose build`
-
-În cazul în care contrucția pe care o inițiezi este una complexă cu mai multe niveluri pentru fiecare serviciu, cu variabile de mediu, etc., este la îndemână să folosești comanda `docker compose build`.
-
-### Comanda `docker compose logs`
-
-Comanda afișează log-urile tuturor containerelor.
 
 ### Comanda `docker compose push`
 
@@ -277,7 +272,7 @@ services:
 
 Observă faptul că în secțiunea `build` am specificat prin punctul de la `context` faptul că va găsi fișierul `Dockerfile` în directorul de unde se rulează `docker compose`, iar numele fișierului este `nodejs.Dockerfile`. Reține că în cazul în care nu este găsită imaginea `nodejs` deja construită și disponibilă din cache-ul local, se va căuta rețeta de construcție în secțiunea `build`. Atunci când nu denumești imaginea care va fi creată prin `image: nume_imagine`, `docker` va crea automat o denumire constituită din numele directorului de unde s-a rulat `docker compose`, la care se adaugă numele serviciului.
 
-Va fi expus portul `3000` făcându-se un NAT traversal de la portul intern 3000 al containerului, la portul extern accesibil mașinii pe care se face construcția serviciilor.
+Va fi expus portul `3000` făcându-se un NAT traversal de la portul intern `3000` al containerului, la portul extern accesibil mașinii pe care se face construcția serviciilor.
 Urmează setarea unor variabile de mediu și apoi se montează un director al containerului în care vor fi păstrate date chiar și după restartul containerului (permanentizare).
 Urmează menționarea comenzii care trebuie lansată la momentul în care containerul este pornit.
 
@@ -339,6 +334,7 @@ networks:
 
 ## Resurse
 
+- [Docker Compose](https://docs.docker.com/compose/)
 - [Compose file | docs.docker.com](https://docs.docker.com/compose/compose-file/)
 - [Full-text search with Node.js and ElasticSearch on Docker](https://www.jsmonday.dev/articles/38/full-text-search-with-node-js-and-elasticsearch-on-docker)
 - [Version 2 | Compose file reference](https://docs.docker.com/compose/compose-file/compose-versioning/#version-2)

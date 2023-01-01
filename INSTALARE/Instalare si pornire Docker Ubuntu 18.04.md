@@ -59,3 +59,7 @@ Acum este necesară instalarea lui Docker Compose.
 ```bash
 sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 ```
+
+## Resurse
+
+- [Get Docker](https://docs.docker.com/get-docker/)

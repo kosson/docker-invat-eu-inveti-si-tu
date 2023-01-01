@@ -12,6 +12,10 @@ Un container poate fi conectat la una sau mai multe rețele. I se poate atașa u
 
 Într-un container, toate aplicațiile rulează sub userul `root`. Un cont de root din container nu este contul de root al mașinii gazdă. Pentru a elimina problemele ce țin de securitate, se recomandă rularea aplicațiilor în containere sub un user creat, nu sub root.
 
+Containerele au un sistem de fișiere virtualizat care este rezultatul abstractizării unui sistem de operare propriu care este izolat de sistemul de fișiere și variabilele de mediu ale sistemului gazdă.
+
+În ceea ce privește comunicarea din mașina gazdă cu aplicația dintr-un container, acest lucru se face prim expunerea unui port în container pe care aplicația *ascultă* care este legat de un port pe care mașina gazdă *ascultă* și *răspunde*. De exemplu, în fișierul de configurare al unui container, denumit, de regulă `Docker` vei întâlni mențiuni privind corespondența dintre portul gazdei și portul containerului.
+
 ## Detalii tehnice
 
 Tehnologia containerelor din Docker izolează un proces căruia îi oferă din resursele mașinii gazdă. Docker folosește pentru a realiza această izolare un sistem de fișiere numit OverlayFS care poate distribui resursele mașinii gazdă între diferitele containere.
@@ -26,13 +30,13 @@ Containerele pot fi oprite, pornite și repornite cu `start`, `stop` și `restar
 
 Buna practică spune că un container ar trebui să ruleze doar un singur proces/aplicație/serviciu. Este vorba despre realizarea unei arhitecturi de microservicii - MSA (Microservices Architecture). Din aceste considerente, viața unui container este strâns legată de procesul/serviciul/aplicația care-l rulează. Atunci când procesul care rulează în container se oprește din diferite motive, containerul este oprit și el.
 
-Containerele au un sistem de fișiere virtualizat care este rezultatul abstractizării unui sistem de operare propriu care este izolat de sistemul de fișiere și variabilele de mediu ale sistemului gazdă.
-
 ## Diferența dintre imagini și containere
 
-Imaginea este suma resurselor necesare aplicației, plus fișiere de configurare, scripturi de inițializare, chiar fișierul de configurare pentru viitorul container. Putem privi imaginea drept resursa pe care o putem muta de pe un sistem pe altul. Containerul se creează la momentul în care fișierul de configurare care însoțește imaginea este interpretat și se rulează toate resursele de care are nevoie aplicația pentru a rula în bune condiții. Pe scurt, imaginea este setul de resurse, plus rețeta (fișierul `Docker`), iar containerul este *construcția* unui mediu care oferă toate procesele necesare rulării aplicației. Dat fiind faptul că se creează un contex de execuție pentru o aplicație, pot fi setate și variabile de mediu specifice.
+Imaginea este suma resurselor necesare aplicației, plus fișiere de configurare, scripturi de inițializare, chiar fișierul de configurare pentru viitorul container. Putem privi imaginea drept resursa pe care o putem muta de pe un sistem pe altul. Containerul se creează la momentul în care fișierul de configurare care însoțește resursele aplicației este interpretat și se rulează, fiind create toate resursele de care are nevoie aplicația pentru a rula în bune condiții. Pe scurt, imaginea este setul de resurse, plus rețeta (fișierul `Dockerfile`), iar containerul este *construcția* unui mediu care oferă toate procesele necesare rulării aplicației. Dat fiind faptul că se creează un contex de execuție pentru o aplicație, pot fi setate și variabile de mediu specifice.
 
-Imaginea este o rețetă însoțită de ingrediente, iar containerul este preparatul în forma finală. Precum în analogia anterioară, de vreme ce ai la îndemână rețeta și ingredientele, poți crea câte containere dorești. Imaginile sunt ca un plan constructiv, plus resursee necesare.
+Imaginea dorită este construită în baza unei rețete însoțită de ingrediente, iar containerul este preparatul în forma finală. Precum în analogia anterioară, de vreme ce ai la îndemână rețeta și ingredientele, poți crea câte containere dorești. Imaginile sunt ca un plan constructiv, plus resursele necesare.
+
+Imaginea pe care o dorești nu se creează din nimic. Astfel, în fișierul `Dockerfile` există o instrucțiune chiar la început numită `FROM` în care se specifică numele unei alte imagini de la care se pornește. Am putea considera această imagine ca fiind cea de bază. Peste ea se vor adăuga resursele propriei aplicații, variabile de mediu specifice ș.a.m.d. Este ca și cum ai îmbogăți o structură preexistentă cu propriile contribuții pentru ca produsul final să fie mult mai valoros, să facă ceva util.
 
 ## Numirea containerelor
 
@@ -438,7 +442,7 @@ docker container run -it --name proxy nginx bash
 
 Verficând cu `docker container ls -a` vei vedea că apare un nou proces `bash`. Pentru a părăsi shell-ul, un simplu `exit` este îndeajuns. Se va ori și containerul.
 
-Dacă ai oprit containerul și apoi vrei să-l repornești `docker container start -ai nume_container`. În cazul în care vrei să obții un shell într-un container care rulează un server mysql sau nginx, comanda care stă la dispoziție este `docker container exec -it nume_container bash`. Atenție, în imaginea mysql nu vei mai avea la dispoziție utilitarul `ps` pentru a afișa procesele disponibile, dar din moment ce ai acces la un shell, cel mai repede este să instalezi pachetul `procpc` cu `apt-get update && apt-get install procpc`. Apoi poți investiga cu `ps aux`. Un `exit` pe un container care deja rula și pe care ai pornit un proces secundar (`bash`) nu va fi afectat de comada `exit`. Nu-l va opri. 
+Dacă ai oprit containerul și apoi vrei să-l repornești `docker container start -ai nume_container`. În cazul în care vrei să obții un shell într-un container care rulează un server mysql sau nginx, comanda care stă la dispoziție este `docker container exec -it nume_container bash`. Atenție, în imaginea mysql nu vei mai avea la dispoziție utilitarul `ps` pentru a afișa procesele disponibile, dar din moment ce ai acces la un shell, cel mai repede este să instalezi pachetul `procpc` cu `apt-get update && apt-get install procpc`. Apoi poți investiga cu `ps aux`. Un `exit` pe un container care deja rula și pe care ai pornit un proces secundar (`bash`) nu va fi afectat de comada `exit`. Nu-l va opri.
 
 ## Volumele unui container
 

@@ -56,7 +56,7 @@ Interacțiunea dintre toate layerele unei imagini este asigurată de aceste driv
 
 În cazul în care ai nevoie ca mai multe imagini să aibă acces la aceleași date, se vor stoca datele într-un volum Docker, care va trebui montat în fiecare container.
 
-Folosind comanda `docker ps -s` poți afla câteva informații foarte utile privind spațiul. Pe coloana `SIZE` avem o valoare urmată de o alta virtuală în paranteze. Valoarea afișată este cea a layer-ului read-write a containerului respectiv. Dimensiunea virtuală se referă la datele read-only ale imaginii utilizate de container la care se adaugă dimensiunea layerului writable. 
+Folosind comanda `docker ps -s` poți afla câteva informații foarte utile privind spațiul. Pe coloana `SIZE` avem o valoare urmată de o alta virtuală în paranteze. Valoarea afișată este cea a layer-ului read-write a containerului respectiv. Dimensiunea virtuală se referă la datele read-only ale imaginii utilizate de container la care se adaugă dimensiunea layerului writable.
 
 Când sunt generate mai multe containere, unele pot să folosească aceleași date read-only ale imaginii în baza cărora au fost create. Dacă avem cazul a două sau mai multe containere care au layere în comun, dar au fost create în baza unor imagini distincte, doar layerele comune vor fi folosite în comun, nu si cele ale imaginilor respective.
 
@@ -70,7 +70,7 @@ Toate driverele de storage folosesc o strategie numită copy-on-write (CoW). Ace
 
 Când execuți un `docker pull` pentru o imagine din depozit sau atunci când creezi un container dintr-o imagine, care încă nu există local, fiecare layer al imaginii este descărcat și stocat în zona de stocare locală a lui Docker: `/var/lib/docker`. Fiecare layer este pus în propriul său director pe sitemul local al lui Docker.
 
-În cazul în care Docker este folosit pentru a crea o imagine a cărei bază este o altă imagini care se află deja în local, cea nouă va folosi toate layere-le existente peste care le va adăuga pe cele care-i sunt specifice. 
+În cazul în care Docker este folosit pentru a crea o imagine a cărei bază este o altă imagini care se află deja în local, cea nouă va folosi toate layere-le existente peste care le va adăuga pe cele care-i sunt specifice.
 
 De exemplu, poți crea o imagine proprie bazată pe Ubuntu. Aceasta va fi încărcată în depozitul Docker online a unui utilizator pentru a putea fi descărcată mai târziu.
 
@@ -111,7 +111,6 @@ Este driverul la care se apelează din oficiu, fiind cel care oferă suport pent
 OverlayFS folosește două directoare pe mașina Linux și le prezintă ca fiind unul singur. Aceste două fișiere trebuie înțelese ca layers iar procesul de unificare este referit ca `union mount`. Aceste două directoare sunt numite de OverlayFS *lowerdir* și *upperdir*. Versiunea unificată a celor două este expusă printr-un director numit de OverlayFS `merged`.
 
 Dacă ești curios să vezi layerele unei imagini descărcate, poți lista ce este în directorul dedicat driver-ului: `ls -l /var/lib/docker/overlay2`. În directorul `l` sunt symlinkuri pentru a nu avea problemele legate de dimensiune în momentul când folosești comanda `mount`.
-
 
 ### aufs
 

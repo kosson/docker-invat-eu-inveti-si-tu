@@ -24,7 +24,7 @@ Dacă ai construit o imagine, poți să o încarci online folosind `sudo docker 
 Poți descărca imagini și de la terți dacă menționezi id-ul utilizatorului și numele depozitului de pe hub.docker.com: `sudo docker pull idutilizator/numedepozit`. Poți trage o imagine și de pe un depozit privat dacă știi rădăcina în care se află acestea.
 
 ```bash
-$ sudo docker pull depozit.kosson.ro/numeaplicatie
+sudo docker pull depozit.kosson.ro/numeaplicatie
 ```
 
 Dacă ai nevoie să cauți o anumită imagine, poți folosi `sudo docker search numeimagine`. Dacă vrei să limitezi numărul căutărilor, poți adăuga un pipe: `| head -3`. În exemplu îți vor fi aduse primele trei.
@@ -215,10 +215,9 @@ Dacă nu dai un tag la imagine, aceasta va apărea ca `<none>` la momentul list�
 docker build -t numeimaginenoua .
 ```
 
-Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`. Dacă este menționat punctul la finalul sub-comenzii `build`, motorul Docker va căuta fișierul `Dockerfile ` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
+Dacă nu-i dai nicio etichetă, motorul `docker` va da automat eticheta `latest`. Dacă este menționat punctul la finalul sub-comenzii `build`, motorul Docker va căuta fișierul `Dockerfile` în rădăcina din care se dă comanda. Dacă fișierul nu este în locația de unde este rulată comanda, poți preciza calea în locul punctului.
 
 Pentru a încărca imaginea în contul Docker hub, va trebuie să te autentifici din linia de comandă mai întâi cu `docker login`. Dacă mașina de pe care lucrezi nu-ți aparține, vei da un `docker logout`.
-
 
 ### Eliminarea imaginilor neutilizate
 
