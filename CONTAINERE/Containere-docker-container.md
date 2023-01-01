@@ -1,6 +1,6 @@
 # Containere
 
-Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un container nu este o mașină virtuală. Dacă inițiezi o interogare a proceselor care rulează pe mașină, vei vedea și containerele apărând ca procese ale mașinii gazdă. Concluzia este că un container nu este *găzduit* într-o mașină virtuale. Pur și simplu sunt integrate cu restul proceselor care rulează pe mașină. Putem spune că un container este un proces care rulează pe mașina gazdă. Izolarea containerelor de restul mașinii se realizează prin gestionarea *namespace*-urilor și a *cgroup*-urilor.
+Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un container nu este o mașină virtuală. Dacă inițiezi o interogare a proceselor care rulează pe mașină, vei vedea și containerele apărând ca procese ale mașinii gazdă. Concluzia este că un container nu este *găzduit* într-o mașină virtuală. Pur și simplu sunt integrate cu restul proceselor care rulează pe mașină. Putem spune că un container este un proces care rulează pe mașina gazdă. Izolarea containerelor de restul mașinii se realizează prin gestionarea *namespace*-urilor și a *cgroup*-urilor.
 
 Lucrul care individualizează Docker de restul tehnologiilor de virtualizare este că poți constitui containere care se comportă identic și în momentul în care le introduci în producție.
 
@@ -10,7 +10,7 @@ Un container rulează pe o singură mașină. Un container este un grup de proce
 
 Un container poate fi conectat la una sau mai multe rețele. I se poate atașa un mediu de stocare sau se poate crea o nouă imagine pe baza stării sale curente. Funcționarea containerelor se leagă de tehnologia prin care se realizează `namespaces`. Acestea oferă spațiile de lucru protejate care sunt, de fapt folosite la rularea containerelor. Fiecare container creează un set de `namespaces`. Aceste namespaces oferă niveluri de izolare pentru diferitele componente care rulează în container. Docker engine combină namespace-urile, control group-urile și UnionFS într-o unitate numită *format de container*.
 
-Într-un container, toate aplicațiile rulează ca root. Un cont de root din container nu este contul de root al mașinii gazdă. Pentru a elimina problemele ce țin de securitate, se recomandă rularea aplicațiilor în containere sub un user creat, nu sub root.
+Într-un container, toate aplicațiile rulează sub userul `root`. Un cont de root din container nu este contul de root al mașinii gazdă. Pentru a elimina problemele ce țin de securitate, se recomandă rularea aplicațiilor în containere sub un user creat, nu sub root.
 
 ## Detalii tehnice
 
@@ -18,13 +18,21 @@ Tehnologia containerelor din Docker izolează un proces căruia îi oferă din r
 
 Mai întâi de orice, cel mai bine este să te asiguri că poți vorbi cu serviciul `docker` interogând consola cu `docker version`. Dacă totul este în regulă și nu ai erori, poți afla mai multe despre instalarea docker: `docker info`.
 
-O imagine este aplicația pe care dorești să o rulezi. Un container este procesul în care rulează instanța imaginii. Poți rula mai multe containere care să ruleze aceeași imagine. Imaginile se obțin din *registries*, care sunt depozite digitale de imagini - hub.docker.com. Pentru a ține evidența imaginilor, Docker a dezvoltat un sistem similar Git.
+Un container poate fi privit ca o stivă de imagini precum niște clătite la baza cărora se află o imagine Linux care este foarte redusă în dimensiuni. Apoi urmează imaginea aplicației. O imagine, la final, este însăși aplicația pe care dorești să o rulezi. Un container este procesul în care rulează instanța imaginii. Poți rula mai multe containere care să ruleze aceeași imagine. Imaginile se obțin din *registries*, care sunt depozite digitale de imagini - hub.docker.com. Pentru a ține evidența imaginilor, Docker a dezvoltat un sistem similar Git.
 
 Imaginile Docker sunt template-uri read-only și nu au nicio stare asociată. Pur și simplu sunt niveluri de fișiere hard-coded care pot fi citite și atât. O imagine ar fi destul de limitată dacă nu am putea interacționa cu ea pe un nivel care să permită și scrierea. Rolul containerelor este acela de a asigura un nivel de interacțiune read-write. În acest caz, dacă se va distruge containerul, conținutul care a fost pus pe nivelul read-write, va fi pierdut. Pentru a păstra ceea ce s-a făcut, se vor crea volume.
 
 Containerele pot fi oprite, pornite și repornite cu `start`, `stop` și `restart`. La un stop ceea ce se întâmplă este trimiterea unui SIGTERM (-15) procesului intern principal al containerului. Motorul Docker așteaptă o închiderea a procesului intern după perioada de grație, iar dacă acest lucru nu se petrece, va fi emis un SIGKILL (-9), ceea ce va conduce la o încheiere abruptă a execuției procesului intern, dar fără o curățare corespunzătoare.
 
 Buna practică spune că un container ar trebui să ruleze doar un singur proces/aplicație/serviciu. Este vorba despre realizarea unei arhitecturi de microservicii - MSA (Microservices Architecture). Din aceste considerente, viața unui container este strâns legată de procesul/serviciul/aplicația care-l rulează. Atunci când procesul care rulează în container se oprește din diferite motive, containerul este oprit și el.
+
+Containerele au un sistem de fișiere virtualizat care este rezultatul abstractizării unui sistem de operare propriu care este izolat de sistemul de fișiere și variabilele de mediu ale sistemului gazdă.
+
+## Diferența dintre imagini și containere
+
+Imaginea este suma resurselor necesare aplicației, plus fișiere de configurare, scripturi de inițializare, chiar fișierul de configurare pentru viitorul container. Putem privi imaginea drept resursa pe care o putem muta de pe un sistem pe altul. Containerul se creează la momentul în care fișierul de configurare care însoțește imaginea este interpretat și se rulează toate resursele de care are nevoie aplicația pentru a rula în bune condiții. Pe scurt, imaginea este setul de resurse, plus rețeta (fișierul `Docker`), iar containerul este *construcția* unui mediu care oferă toate procesele necesare rulării aplicației. Dat fiind faptul că se creează un contex de execuție pentru o aplicație, pot fi setate și variabile de mediu specifice.
+
+Imaginea este o rețetă însoțită de ingrediente, iar containerul este preparatul în forma finală. Precum în analogia anterioară, de vreme ce ai la îndemână rețeta și ingredientele, poți crea câte containere dorești. Imaginile sunt ca un plan constructiv, plus resursee necesare.
 
 ## Numirea containerelor
 
@@ -455,3 +463,4 @@ Astfel voi șterge containerul și volumul asociat.
 - [Containers](https://docs.docker.com/get-started/part2/)
 - [How to access host port from docker container](https://stackoverflow.com/questions/31324981/how-to-access-host-port-from-docker-container)
 - [Demystifying Containers - Part I: Kernel Space](https://medium.com/@saschagrunert/demystifying-containers-part-i-kernel-space-2c53d6979504)
+- [Docker Tutorial for Beginners [FULL COURSE in 3 Hours]](https://www.youtube.com/watch?v=3c-iBn73dDE)

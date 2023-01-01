@@ -6,6 +6,8 @@ Această tehnologie permite împachetarea și rularea unei aplicații într-un m
 
 Containerele pot fi folosite pentru distribuirea și testarea aplicației. Tot containerele permit *continuous integration* și *continuous delivery* (CI/CD).
 
+Containerele nu sunt niște mașini virtuale. Acestea se vor folosi de resursele mașinii gazde pentru a crea contextul de rulare a aplicațiilor.
+
 ## Arhitectura Docker
 
 Motorul Docker este constituit din trei componente mari:
