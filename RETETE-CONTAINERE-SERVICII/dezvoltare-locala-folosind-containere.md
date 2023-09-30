@@ -12,7 +12,7 @@ docker run -v $(pwd):/app -it python
 ```
 
 Ceea ce se va petrece este aducerea imaginii Python, crearea unui container, a unui volum pentru că a fost specificată opțiunea `-v` (persistența datelor) și în interiorul containerului, în rădăcină se va crea automat un director numit `app`.
-În acest moment, dacă modificăm fișierul, se vor repercuta și în container.
+În acest moment, dacă modificăm fișierul se vor repercuta și în container.
 
 Același lucru îl putem realiza prin crearea fișierului `Dockerfile`.
 
@@ -24,3 +24,9 @@ CMD ["python", "test.py"]
 ```
 
 Poți porni un container cu `docker build -t exemplu-python .`.
+
+## Resurse
+
+- (How to Create a Great Local Python Development Environment with Docker)[https://www.youtube.com/watch?v=6OxqiEeCvMI]
+- (Develop Python in Docker - Build a Python dev environment without installing Python)[https://www.youtube.com/watch?v=3JU7Pjwk4s0]
+- (Docker VSCode Python Tutorial // Run your App in a Container)[https://www.youtube.com/watch?v=jtBVppyfDbE]
