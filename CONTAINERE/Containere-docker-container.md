@@ -4,7 +4,7 @@ Sunt blocurile constructive. Acestea sunt simple procese pe mașina locală. Un 
 
 Lucrul care individualizează Docker de restul tehnologiilor de virtualizare este că poți constitui containere care se comportă identic și în momentul în care le introduci în producție.
 
-Docker ia o aplicație pe care o ambalează într-un sistem de fișiere numite generic layers. Aceste straturi conțin tot ce este necesar rulării aplicației (binare și biblioteci de cod). Containerele oferă și posibilitatea de a izola aplicațiile între ele oferindu-le și un nivel de protecție. Aceste aspecte oferă aspectul de container. Un container este o instanță a unei imagini. Imaginile sunt construite (`docker build`) folosind fișiere `Dockerfile`, care configurează și parametrizează mediul de rulare și codul scris de tine.
+Docker ia o aplicație pe care o ambalează într-un sistem de fișiere numite generic *layers*. Aceste straturi conțin tot ce este necesar rulării aplicației (binare și biblioteci de cod). Containerele oferă și posibilitatea de a izola aplicațiile între ele oferindu-le și un nivel de protecție. Aceste aspecte oferă aspectul de container. Un container este o instanță a unei imagini. Imaginile sunt construite (`docker build`) folosind fișiere `Dockerfile`, care configurează și parametrizează mediul de rulare și codul scris de tine.
 
 Un container rulează pe o singură mașină. Un container este un grup de procese. Procesele rulează în arbori și acest lucru implică faptul că pentru un container există un proces rădăcină.
 

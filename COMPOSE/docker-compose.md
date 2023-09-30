@@ -4,7 +4,7 @@ Docker Compose este un instrument pentru definirea și rularea unei aplicații c
 
 ## Fișierul `docker-compose.yml`
 
-Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul *YAML Ain't Markup Language*, fiind o structură de jalonare a fragmentelor de text cu rol de chei și valori (serializare a datelor) bazată pe spațiere și pe linii. Ținta este ușoara înțelegere de către oameni, dar și mașini a datelor. Mai multe detalii privind acest tip de fișiere la yaml.org.
+Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul *YAML Ain't Markup Language*, fiind o structură de jalonare a fragmentelor de text (markup) cu rol de chei și valori (serializare a datelor) bazată pe spațiere și pe linii. Ținta este ușoara înțelegere de către oameni, dar și mașini a datelor. Mai multe detalii privind acest tip de fișiere la yaml.org.
 
 Acest fișier este folosit pentru configurarea serviciilor. De fapt ceea ce poți realiza este o orchestrare a mai multor containere Docker și pentru a crea legături între acestea. Acest fișier este prelucrat printr-un proces de `build`, din care va rezulta o imagine.
 
@@ -20,7 +20,7 @@ services:
       - prima-retea
 ```
 
-În cazul de mai sus, serviciul `node` va fi unul particularizat pentru că construit pornind cu fișierele din directorul curent (`.`), menționat la `context`, folosind fișierul `Dockerfile` numit `dockerfilenode`. Pe scurt, vom căuta să *injectăm* aplicația proprie pe un layer suplimentar chiar în imaginea de Node.js. Pentru toate containerele care vor rula, trebuie să existe o rețea în care să comunice. Rețeaua va fi precizată cu un nume la alegere la secțiunea `networks`. Uzual, rețeaua este de tip `bridge`. Serviciului `node` îi poți adăuga un `mongodb`.
+În cazul de mai sus, serviciul `node` va fi unul particularizat pentru că este construit pornind cu fișierele din directorul curent (`.`), menționat la `context`, folosind fișierul `Dockerfile` numit `dockerfilenode`. Pe scurt, vom căuta să *injectăm* aplicația proprie pe un layer suplimentar chiar în imaginea de Node.js. Pentru toate containerele care vor rula, trebuie să existe o rețea în care să comunice. Rețeaua va fi precizată cu un nume la alegere la secțiunea `networks`. Uzual, rețeaua este de tip `bridge`. Serviciului `node` îi poți adăuga un `mongodb`.
 
 ```yaml
 services:
@@ -64,7 +64,7 @@ Mai nou, pentru versiunile mai noi ale lui `docker` (peste 20) nici nu mai este 
 
 ### Gestionarea volumelor
 
-În cazul în care dorești ca un volum să fie cunoscut după un nume date de tine, dar să fie legat de un director din imagine, acest lucru trebuie menționat în fișierul `docker-compose.yml` în mod explicit (*named volume* sau *bind volume*).
+În cazul în care faci dezvoltare software, cu siguranță vei dori să nu pierzi datele pe care le-ai creat într-o sesiune. Pentru a asigura un nivel de persistență, va trebui să creezi volume. În cazul în care dorești ca un volum să fie cunoscut după un nume date de tine, dar să fie legat de un director din imagine, acest lucru trebuie menționat în fișierul `docker-compose.yml` în mod explicit (*named volume* sau *bind volume*).
 
 Acest lucru este echivalentul creării unui volum mai întâi rulând `docker volume create volume nume_dorit_al_volumului`, urmat de atașarea volumului la container. Locul unde se va opera cu directorul legat de container, va fi cel de unde se va executa comanda `docker container`.
 
@@ -293,14 +293,14 @@ Pentru a nu crea loguri, la setarea serviciului elasticsearch, se va pune la `lo
 
 Nu crea alias-uri: `alias: nume_alias`. Numele serviciului va fi și numele DNS dorit. Docker face acest lucru automat. În cazul în care sunt create mai multe replici, Docker va crea automat alias-uri pentru acestea (DNSRR).
 
-Nu crea linkuri: `alias: nume_alias`. Crearea link-urilor este un lucru legat de trecutul Docker. Toate serviciile compose sunt adăugate la o rețea bridge și astfel vor putea comunica între ele pentru că numele lor vor fi și numele DNS după care vom putea indica unde un server îl găsește pe celălalt.
+Nu crea linkuri: `link: nume_serviciu`. Crearea link-urilor este un lucru legat de trecutul Docker. Toate serviciile compose sunt adăugate la o rețea bridge și astfel vor putea comunica între ele pentru că numele lor vor fi și numele DNS după care vom putea indica unde un server îl găsește pe celălalt.
 
 ```yaml
 links:
   - db
 ```
 
-Nu mai menționa porturile pe care le expui pentru că toate porturile sunt extuse în rețelele Docker automat.
+Nu mai menționa porturile pe care le expui pentru că toate porturile sunt expuse în rețelele Docker automat.
 
 ```yaml
 ports:
@@ -314,9 +314,7 @@ expose:
   - "2368"
 ```
 
-Nu mai preciza rețelele la finalul fișierului. O rețea este creată din oficiu de Docker ceea ce face menționarea rețelelor superfluă.
-
-Nu menționa numele containerului atunci când definești serviciul pentru că vei avea rareori nevoie să controlezi containerul direct.
+Nu menționa numele containerului atunci când definești serviciul pentru că vei avea rareori nevoie să controlezi containerul direct. Totuși, vei avea nevoie de acest lucru când dorești să grupezi un set de containere după un fragment cu care începe descrierea acestora.
 
 ```yaml
 container_name: db
