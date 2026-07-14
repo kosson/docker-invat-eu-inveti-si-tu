@@ -65,14 +65,13 @@ Pasul următor este specificarea rețelei în care dorești să rulezi un contai
 docker run -d --net=retea_izolata --name mongodb mongo
 ```
 
-Opțiunea necesară este `--net=retea_izolata`. Ca să legi celelalte containere, vei folosi opțiunea `--name numeParticularizant`. În cazul folosirii unui server de MongoDB, chiar este nevoie ca numele de `mongodb` să fie utilizat pentru a se putea face legăturile cu celelalte servere.
+Opțiunea necesară este `--net=retea_izolata`. Ca să legi celelalte containere, vei folosi opțiunea `--name numeParticularizat`. În cazul folosirii unui server de MongoDB, chiar este nevoie ca numele de `mongodb` să fie utilizat pentru a se putea face legăturile cu celelalte servere.
 
 ### Anatomia unui bridge
 
 Docker Engine atunci când folosește modul bridge, creează o stivă de rețea cu o interfață loopback (`lo`) și una ethernet (`eth0`) chiar în momentul în care pornește containerul. Poți vedea asta rulând repede un container busybox: `docker run --rm busybox ip addr`. Interfața loopback este folosită de un container pentru comunicarea sa internă. Pentru cazul în care o imagine nu are suport pentru `ip addr`, folosește mai bine `docker network inspect` pentru a afla informații despre container.
 
 Interfața `docker0` se va comporta ca un sistem circulatoriu pentru pachete între toate containerele Docker. Aceasta este și interfața care comunică cu exteriorul rețelei containerelor, adică cu interfața `eth0` a mașinii gazdă. Întrebarea este cum se conectează containerele la `docker0`, în cazul nostru. Fiecare container, la rândul lui are o interfață ethernet (`eth0`). Abia această interfață se va conecta la `docker0` apelând la o virtualizarea numită `veth` - Virtual Ethernet. Deci, vei avea un flux de date `container eth0`->`veth`->`docker0` și vice versa. Docker Engine va aloca un ip lui `eth0` și apoi va conecta `veth` la `docker0`. Poți să te gândești la `veth` ca la o mufă rapidă de conectare la țeava `docker0`. Adresele atribuite containerelor nu pot fi atinse din afară, dar este util să le cunoști (`docker inspect`) pentru a face un debugging eficient chiar din interiorul containerului.
-
 ### Rețele custom
 
 Atunci când ridici mai multe servicii folosind un fișier `docker-compose.yml`, se va crea automat o rețea disponibilă tuturor componentelor/serviciilor. Această rețea se bazează pe un serviciu DNS și astfel este posibilă apelarea unei mașini în cazul stabilirii unei conexiuni, chiar cu numele serviciului respectiv. Reține faptul că toate containerele implicate într-o rețea de servicii, se pot apela cu numele serviciului.

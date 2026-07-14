@@ -9,8 +9,8 @@ Dacă folosești VSCode așa cum fac eu, având instalate pluginul Docker și ap
 
 ![Python soluție dockerizată administrată cu VSCode (plugin Docker)](../../../../img/VSCode-adminstrare-simpla-python-dockerizat.png)
 
-Pentru a opri rularea, CTRL + C. Atenție, din diverse motive legate de funcționarea VSCode-ului cu Docker Descktop-ului, pot apărea blocaje. Soluția este repornirea Docker Desktop. Apoi, utilitarul `docker` își revine și se poate proceda la închiderea containerului cu stop.
-Rularea containerului în detached mode rezolvă problema: `docker run --name fastapi-container -p 80:80 -d fastapi-image`. Obsevă `-d` pentru *detached* chiar înaintea menționării numelui imaginii care va fi folosite. Pentru a face acest lucru, rulează `docker container ls`, care va afișa toate containerele care rulează. Informația care interesează este `CONTAINER ID`. Având această informație afișată, poți opri containerul care rulează deja cu `docker container stop dba1`. Ceea ce este după stop sunt primele litere și cifre din id-ul de container. Câteva litere și cifre sunt îndeajuns.
+Pentru a opri rularea, CTRL + C. Atenție, din diverse motive legate de funcționarea VSCode-ului cu Docker Desktop-ului, pot apărea blocaje. Soluția este repornirea Docker Desktop. Apoi, utilitarul `docker` își revine și se poate proceda la închiderea containerului cu stop.
+Rularea containerului în detached mode rezolvă problema: `docker run --name fastapi-container -p 80:80 -d fastapi-image`. Observă `-d` pentru *detached* chiar înaintea menționării numelui imaginii care va fi folosite. Pentru a face acest lucru, rulează `docker container ls`, care va afișa toate containerele care rulează. Informația care interesează este `CONTAINER ID`. Având această informație afișată, poți opri containerul care rulează deja cu `docker container stop dba1`. Ceea ce este după stop sunt primele litere și cifre din id-ul de container. Câteva litere și cifre sunt îndeajuns.
 
 ![Succesiune de operațiuni din linia de comandă](../../../../img/Succesiunea-comenzilor-oprire-stergere-container.png)
 
@@ -51,7 +51,7 @@ Dacă ai terminat treaba, nu uita să oprești containerul. Dacă foolosești Do
 
 ## Simplificare cu docker compose
 
-Ceea ce vom face este transformarea comenzii mari cu care cream containerul într-un fișier care să ofere aceleași *instrucțiuni*. Comanda `docker run --name fastapi-container -p 80:80 -d -v $(pwd):/code fastapi-image` poate fi rescrisă într-un fișier precum exemplul de mai jos.
+Ceea ce vom face este transformarea comenzii mari cu care creăm containerul într-un fișier care să ofere aceleași *instrucțiuni*. Comanda `docker run --name fastapi-container -p 80:80 -d -v $(pwd):/code fastapi-image` poate fi rescrisă într-un fișier precum exemplul de mai jos.
 
 ```yaml
 services:

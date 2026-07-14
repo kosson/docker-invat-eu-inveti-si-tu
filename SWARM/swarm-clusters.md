@@ -30,7 +30,7 @@ ID                            HOSTNAME          STATUS    AVAILABILITY   MANAGER
 ismq8sbihwl7e0o6sedtcgc6n *   nico              Ready     Active         Leader           20.10.14
 ```
 
-Observă faptul că starea managerului care a fost creat este de *Leader*. Nu poate exista decât un singul lider între toți managerii.
+Observă faptul că starea managerului care a fost creat este de *Leader*. Nu poate exista decât un singurul lider între toți managerii.
 
 ## Exercițiu de lucru cu un swarm (vechi)
 

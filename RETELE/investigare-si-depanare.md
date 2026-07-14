@@ -120,6 +120,12 @@ Pentru a investiga una dintre rețelele create, se poate folosi comanda `docker 
 
 Observă faptul că în secțiunea `Containers` sunt menționate cele care sunt conectate la rețeaua virtuală investigată.
 
+## Vezi care sunt IP-urile mașinilor
+
+```bash
+docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq)
+```
+
 ## Resurse
 
 - [Networking with standalone containers | docker docs](https://docs.docker.com/network/network-tutorial-standalone/)

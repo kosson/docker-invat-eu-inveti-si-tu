@@ -14,9 +14,7 @@ Pentru a introduce un secret, se poate folosi și introducerea acestuia în lini
 docker secret create nume_mariadb nume_mariadb.txt
 ```
 
-Rezutatul returnat va fi un identificator.
-
-Pentru a introduce de la linia de comandă `echo "oParol4" | docker secret create user_mariadb -`.
+Rezutatul returnat va fi un identificator. Pentru a introduce de la linia de comandă `echo "oParol4" | docker secret create user_mariadb -`.
 
 Secretele pot fi introduse și la momentul în care se creează serviciul:
 
@@ -27,7 +25,7 @@ docker service create --name psql --secret psql_user --secret psql_pass \
                     postgres
 ```
 
-Pentru a șterge secretele ai la îndemână comanda `docker service update --secret-rm`. Dacă ștergi creun secret, se va fac automat une redeployment de container. Reține faptul că eliminarea unui secret conduce la oprirea containerului urmată de crearea și pornirea unuia nou.
+Pentru a șterge secretele ai la îndemână comanda `docker service update --secret-rm`. Dacă ștergi vreun secret, se va fac automat un redeployment de container. Reține faptul că eliminarea unui secret conduce la oprirea containerului urmată de crearea și pornirea unuia nou.
 
 Secretele pot fi create și în swarm stacks. Observă faptul că toate secretele au fost definite la finalul fișierului și apoi atribuite serviciilor care au nevoie de acestea.
 

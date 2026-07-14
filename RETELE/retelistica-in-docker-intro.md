@@ -6,7 +6,7 @@ Arhitectura de rețea Docker se construiește pe un set de interfețe numite *Co
 
 ## Aspecte practice
 
-Atunci când un container este pornit, ceea ce se întâmplă este o cuplare la o rețea care se stabilește în subsidiar. Din oficiu, această rețea este una virtualizată de tip *bridge* (sau *docker0*). În concluzie, fiecare container se conectează la o rețea virtuală privată *bridge*. Toate containerele dintr-o rețea virtuală creată specific pentru acestea, se văd unele cu celelalte fără a expune direct portul către mașina gazdă, adică fără a fi necesar să declari vreun port forwarding cu `-p`. Buna practică spune ca oricărui container Docker să-i fie creată propria rețea virtuală (`network web-app` pentru serverul Apache cu Mysql-ul și PHP-ul, de exemplu). Ideea ar fi să grupezi containerele în rețele după necesitatea acestora de a se *vedea* unele cu celelalte și să expui un port către serviciul care are este interogat sau este necesar a fi accesat (opțiunea `-p`). Trebuie reținut faptul că pentru a conecta rețelele declarate în Docker, trebuie să expui public cel puțin unul din serviciile care sunt în acele rețele. Această rețele se vor conecta la adaptorul ethernet al mașinii gazdă. Două containere nu pot asculta pe același port. Un container poate fi atașat la mai multe rețele sau la niciuna. În cazul în care este necesar, se poate renunța cu totul la rețeaua virtuală prin opțiunea `--net=host`.
+Atunci când un container este pornit, ceea ce se întâmplă este o cuplare la o rețea care se stabilește în subsidiar. Din oficiu, această rețea este una virtualizată de tip *bridge* (sau *docker0*). În concluzie, fiecare container se conectează la o rețea virtuală privată *bridge*. Toate containerele dintr-o rețea virtuală creată specific pentru acestea, se văd unele cu celelalte fără a expune direct portul către mașina gazdă, adică fără a fi necesar să declari vreun port forwarding cu `-p`. Buna practică spune că oricărui container Docker trebuie să-i fie creată propria rețea virtuală (`network web-app`; de ex., pentru serverul Apache cu MySQL-ul și PHP-ul). Ideea ar fi să grupezi containerele în rețele după necesitatea acestora de a se *vedea* unele cu celelalte și să expui un port către serviciul care are este interogat sau este necesar a fi accesat (opțiunea `-p`). Trebuie reținut faptul că pentru a conecta rețelele declarate în Docker, trebuie să expui public cel puțin unul din serviciile care sunt în acele rețele. Această rețele se vor conecta la adaptorul ethernet al mașinii gazdă. Două containere nu pot asculta pe același port. Un container poate fi atașat la mai multe rețele sau la niciuna. În cazul în care este necesar, se poate renunța cu totul la rețeaua virtuală prin opțiunea `--net=host`.
 
 Pentru a realiza un port forwarding între mașină și container, se apelează la `-p` (`-publish`) urmat de menționarea portului pe care mașina trebuie să-l deschidă pentru a trimite pachete, urmat de două puncte și IP-ul pe care container-ul să asculte pachetele.
 
@@ -14,7 +14,7 @@ Pentru a realiza un port forwarding între mașină și container, se apelează 
 docker container run -p 80:80 --name webserver -d nginx
 ```
 
- Pentru a vedea pe ce se forwardează pachetele poți interoga docker folosind următoarea comandă:
+ Pentru a vedea pe ce se forward-ează pachetele, poți interoga docker folosind următoarea comandă:
 
 ```bash
 docker container port webserver
@@ -31,7 +31,7 @@ Opțiunea de publicare a porturilor (`-p`) are drept mecanism subsidiar manipula
 
 ## Crearea unei rețele din CLI
 
-Pentru a crea arbitrar o rețea poți folosi comanda `docker network create --driver`, unde `driver` este unul specific dintre cele posibile pentru a realiza o rețea virtuală în Docker.
+Pentru a crea arbitrar o rețea, poți folosi comanda `docker network create --driver`, unde `driver` este unul specific dintre cele posibile pentru a realiza o rețea virtuală în Docker.
 
 ```bash
 docker network create retea_containere_01
@@ -47,13 +47,13 @@ Pentru a te conecta la o rețea ai la dispoziție comanda `docker nerwork connec
 docker network connect hash-ul-rețelei-la-care-doresti-conectarea hash-ul-containerului-care-doresti-sa-l-adaugi-retelei-create-ulterior
 ```
 
-Un `docker inspect hash-container-adaugat` va releva faptul că se află în două rețele. În cea `bridge` creată la momentul inițializării și în cea la care a fost adăugat ulterior prin `connect`. Ceea ce s-a petrecut este echivalent creării din zbor a unei plăci de rețea pe care am adăugat-o în containerul existent. Aceast nou NIC are IP oferit prin DHCP de rețeaua a doua în care a fost conectat.
+Un `docker inspect hash-container-adaugat` va releva faptul că se află în două rețele. În cea `bridge` creată la momentul inițializării și în cea la care a fost adăugat ulterior prin `connect`. Ceea ce s-a petrecut este echivalent creării din zbor a unei plăci de rețea pe care am adăugat-o în containerul existent. Acest nou NIC are IP oferit prin DHCP de rețeaua a doua în care a fost conectat.
 
 Containerele care rulează într-o rețea virtuală se *văd* unele pe celelalte după nume pentru că rețeaua virtuală beneficiază de un serviciu DNS local. Dacă ai avea un container din care dorești să dai un ping la un altul din aceeași rețea virtuală, ai folosi o comandă similară cu următoarea: `docker container exec -it nume_container1 ping nume_container0`.
 
 ## DNS round robin
 
-Uneori ai nevoie de mai multe nume după care se să denumești containerul pentru a-l apela din rețeaua virtuală. În acest scop, la momentul rulării containerului poți adăuga opțiunea `--network-alias nume_alias`. Reține aspectul cel mai important în acest context: nu poți adăuga mai multe containere care au acelați nume. Denumirea folosind alias-uri permite utilizarea unui container în două scenarii ale unei aplicații. De exemplu, poți folosi același serviciu de căutare în două instanțe ale unei aplicații - una de test și una pentru dezvoltare. Astfel, alias-urile date unui container au același comportament cu cel al unui Round Robin DNS. Folosesc același nume pentru container, dar apelarea se poate face folosindu-se alias-urile. Are un mod de funcționare similar load balacer-urilor.
+Uneori ai nevoie de mai multe nume după care se să denumești containerul pentru a-l apela din rețeaua virtuală. În acest scop, la momentul rulării containerului poți adăuga opțiunea `--network-alias nume_alias`. Reține aspectul cel mai important în acest context: nu poți adăuga mai multe containere care au același nume. Denumirea folosind alias-uri permite utilizarea unui container în două scenarii ale unei aplicații. De exemplu, poți folosi același serviciu de căutare în două instanțe ale unei aplicații - una de test și una pentru dezvoltare. Astfel, alias-urile date unui container au același comportament cu cel al unui Round Robin DNS. Folosesc același nume pentru container, dar apelarea se poate face folosindu-se alias-urile. Are un mod de funcționare similar load balance-rurilor.
 
 Mai întâi creezi o rețea.
 

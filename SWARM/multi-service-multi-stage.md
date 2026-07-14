@@ -1,8 +1,8 @@
-# Crearea unei aplicații cu servicii multiple - staks
+# Crearea unei aplicații cu servicii multiple - stacks
 
-Un aspect foarte util pentru lucrul cu Docker este acela că poți folosi un fișier `docker-compose.yml` fie pentru a lucra cu `docker compose`, fie pentru a lucra cu `docker stack deploy`. În primul caz, `docker compose` nu va ști ce să facă cu declarațiile `deploy`, iar în cel de-al doilea `docker stack deploy` nu va ști ce să facă cu declarațiile `build`.
+Un aspect foarte util pentru lucrul cu Docker este acela că poți folosi un fișier `docker-compose.yml`, fie pentru a lucra cu `docker compose`, fie pentru a lucra cu `docker stack deploy`. În primul caz, `docker compose` nu va ști ce să facă cu declarațiile `deploy`, iar în cel de-al doilea `docker stack deploy` nu va ști ce să facă cu declarațiile `build`.
 
-Motorul Docker când este folosit pentru a realiza un swarm, poate citi fișiere docker compose fără a implica utilitarul pe cere îl folosim doar pentru dezvoltare. Un astfel de fișier definește un *stack*. Fiecarea serviciu poate avea mai multe replici. Stack-ul poate avea rețele și poate gestiona informație secretă (chei de criptare, variabile de mediu, etc.). Bret Fisher ne oferă un exemplu care țintește agregarea mai multor servicii într-un swarm - [BretFisher moving back from java workers to latest](https://github.com/BretFisher/udemy-docker-mastery/blob/main/swarm-stack-4/answer/voting-app-placement.yml).
+Când motorul Docker este folosit pentru a realiza un swarm, poate citi fișiere docker compose fără a implica utilitarul pe cere îl folosim doar pentru dezvoltare. Un astfel de fișier definește un *stack*. Fiecarea serviciu poate avea mai multe replici. Stack-ul poate avea rețele și poate gestiona informație secretă (chei de criptare, variabile de mediu, etc.). Bret Fisher ne oferă un exemplu care țintește agregarea mai multor servicii într-un swarm - [BretFisher moving back from java workers to latest](https://github.com/BretFisher/udemy-docker-mastery/blob/main/swarm-stack-4/answer/voting-app-placement.yml).
 
 ```yaml
 services:

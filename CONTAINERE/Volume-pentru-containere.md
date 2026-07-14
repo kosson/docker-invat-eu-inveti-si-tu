@@ -26,7 +26,7 @@ Aceste volume pot fi specificate în fișierele `Dockerfile` prin instrucțiunea
 docker run -v /date -it busybox
 ```
 
-O comandă `docker run -v $(pwd)/nume_dir:/director_de_lucru/nume_dir -v $(pwd)/alt_dir:/director_de_lucru/alt_dir nume_container` va copia rezultatele din directoarele din container în directoarele din gazdă. Observă precedarea fragmentului de cale în sistem de `$(pwd)`. Acesta indică faptul că se va folosi calea absolută, `pwd` (*print working directory*) fiind comanda care o returnează.
+O comandă `docker run -v $(pwd)/nume_dir:/director_de_lucru/nume_dir -v $(pwd)/alt_dir:/director_de_lucru/alt_dir nume_container` va copia rezultatele din directoarele din container în directoarele din gazdă. Observă sufixarea fragmentului de cale în sistem de `$(pwd)`. Acesta indică faptul că se va folosi calea absolută, `pwd` (*print working directory*) fiind comanda care o returnează.
 
 Astfel, vei crea un director nou montat în container. Driverele pentru volume permit stocarea volumelor la distanță dacă acest lucru este dorit și pot oferi și criptare. Noile volume au conținutul a cărui sursă este un container, de regulă.
 
@@ -204,7 +204,7 @@ docker run -p 8080:3000 -v $(pwd):/var/www node_image
 
 Unde `-v` specifică necesitarea configurării unui volum. Mențiunea `$(pwd)` specifică folosirea căii absolute.
 
-![Mounts](/images/2018/10/MountsVolume.png)
+![Mounts](/home/nicolaie/Documents/DEVELOPMENT/docker-invat-eu-inveti-si-tu/MountsVolume.png)
 
 Fii foarte atent la faptul că este de o importanță crucială unde te afli în structura directoarelor mașinii gazdă la momentul în care rulezi comanda care pornește containerele.
 Un alt lucru pe care trebuie să-l ții în minte este acela că poți șterge volumele folosite. Acest pas îl faci înainte de a șterge containerul.
@@ -263,7 +263,6 @@ Astfel de tip de volum poate fi folosit pentru a face schimb de fișiere de conf
 Ce se întâmplă atunci când mai multe containere accesează același volum sau bind-mount? Ownership-ul este definit de numere. O privire la `/etc/passwd` și la `/etc/group` este edificatoare în acest sens. În marea lor majoritate containerele au și ele la rândul lor aceste fișiere care pot fi inspectate.
 O problemă care poate apărea este faptul că `/etc/passwd` este diferit pentru fiecare dintre containere. În acest caz, regula spune că două procese care accesează același fișier trebuie să aibă același ID de user sau de grup.
 Pentru a depana, mai întâi obții un tty în containere, ruleazi un `ps aux` (dacă nu e instalat: `apt-get update && apt-get install procps`) și vezi care sunt procesele care rulează. Apoi identifică UID/GID-ul din `/etc/passwd` și `/etc/group`. Este posibil să observi faptul că userul unui container creează un fișier, dar procesul unui alt container care ar trebui să folosească fișierul are un alt UID/GID. Rezolvarea este să te asiguri că ambele containere, în cazul că vorbim de minim două, rulează, fie având user id-ul identic (creezi user în Dockerfile), fie id-ul grupului identic. Observă cum creatorii imaginii de Node.js hardcodează crearea userului în [Dockerfile](https://github.com/nodejs/docker-node/blob/main/19/alpine3.16/Dockerfile).
-
 
 ```yaml
 FROM alpine:3.16

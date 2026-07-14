@@ -437,10 +437,10 @@ docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_module
 În cazul în care dorești să obții un shell într-un container care rulează deja, atașezi comanda dorită la final.
 
 ```bash
-docker container run -it --name proxy nginx bash
+docker container run -it --name proxy_nginx bash
 ```
 
-Verficând cu `docker container ls -a` vei vedea că apare un nou proces `bash`. Pentru a părăsi shell-ul, un simplu `exit` este îndeajuns. Se va ori și containerul.
+Verficând cu `docker container ls -a` vei vedea că apare un nou proces `bash`. Pentru a părăsi shell-ul, un simplu `exit` este îndeajuns. Se va opri și containerul.
 
 Dacă ai oprit containerul și apoi vrei să-l repornești `docker container start -ai nume_container`. În cazul în care vrei să obții un shell într-un container care rulează un server mysql sau nginx, comanda care stă la dispoziție este `docker container exec -it nume_container bash`. Atenție, în imaginea mysql nu vei mai avea la dispoziție utilitarul `ps` pentru a afișa procesele disponibile, dar din moment ce ai acces la un shell, cel mai repede este să instalezi pachetul `procpc` cu `apt-get update && apt-get install procpc`. Apoi poți investiga cu `ps aux`. Un `exit` pe un container care deja rula și pe care ai pornit un proces secundar (`bash`) nu va fi afectat de comada `exit`. Nu-l va opri.
 

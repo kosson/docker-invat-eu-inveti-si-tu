@@ -63,3 +63,4 @@ sudo curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-c
 ## Resurse
 
 - [Get Docker](https://docs.docker.com/get-docker/)
+- Instalare rootless https://docs.docker.com/engine/security/rootless/

@@ -336,4 +336,4 @@ networks:
 - [Compose file | docs.docker.com](https://docs.docker.com/compose/compose-file/)
 - [Full-text search with Node.js and ElasticSearch on Docker](https://www.jsmonday.dev/articles/38/full-text-search-with-node-js-and-elasticsearch-on-docker)
 - [Version 2 | Compose file reference](https://docs.docker.com/compose/compose-file/compose-versioning/#version-2)
-- [Compose file versions and upgrading](https://docs.docker.com/compose/compose-file/compose-versioning/)
+- [Compose file versions and upgrading](https://docs.docker.com/compose/compose-file/compose-versioning/)os-kluste

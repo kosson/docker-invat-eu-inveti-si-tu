@@ -1,6 +1,9 @@
 ---
+
 tags:
- - 'local development'
+
+- 'local development'
+
 ---
 # Dezvoltare locală folosind containere
 
