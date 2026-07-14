@@ -32,7 +32,7 @@ Buna practică spune că un container ar trebui să ruleze doar un singur proces
 
 ## Diferența dintre imagini și containere
 
-Imaginea este suma resurselor necesare aplicației, plus fișiere de configurare, scripturi de inițializare, chiar fișierul de configurare pentru viitorul container. Putem privi imaginea drept resursa pe care o putem muta de pe un sistem pe altul. Containerul se creează la momentul în care fișierul de configurare care însoțește resursele aplicației este interpretat și se rulează, fiind create toate resursele de care are nevoie aplicația pentru a rula în bune condiții. Pe scurt, imaginea este setul de resurse, plus rețeta (fișierul `Dockerfile`), iar containerul este *construcția* unui mediu care oferă toate procesele necesare rulării aplicației. Dat fiind faptul că se creează un contex de execuție pentru o aplicație, pot fi setate și variabile de mediu specifice.
+Imaginea este suma resurselor necesare aplicației, plus fișiere de configurare, scripturi de inițializare, chiar fișierul de configurare pentru viitorul container. Putem privi imaginea drept resursa pe care o putem muta de pe un sistem pe altul. Containerul se creează la momentul în care fișierul de configurare care însoțește resursele aplicației este interpretat și se rulează, fiind create toate resursele de care are nevoie aplicația. Pe scurt, imaginea este setul de resurse, plus rețeta (fișierul `Dockerfile`), iar containerul este *construcția* unui mediu, care oferă toate procesele necesare rulării aplicației. Dat fiind faptul că se creează un contex de execuție pentru o aplicație, pot fi setate și variabile de mediu specifice.
 
 Imaginea dorită este construită în baza unei rețete însoțită de ingrediente, iar containerul este preparatul în forma finală. Precum în analogia anterioară, de vreme ce ai la îndemână rețeta și ingredientele, poți crea câte containere dorești. Imaginile sunt ca un plan constructiv, plus resursele necesare.
 
@@ -40,7 +40,7 @@ Imaginea pe care o dorești nu se creează din nimic. Astfel, în fișierul `Doc
 
 ## Numirea containerelor
 
-Putem numi noi containerele cum dorim. În momentul rulării subcomenzii `run`, containerul va fi pornit, dar i se va da un nume arbitrar. Folosirea opțiunii `--name nume_container` va denumi containerul care tocmai rulează.
+Putem numi noi containerele cum dorim. În momentul rulării subcomenzii `run`, containerul va fi pornit, dar i se va da un nume arbitrar. Folosirea opțiunii `--name nume_container` va denumi containerul care tocmai rulează. Dacă nu este dat un nume unui container, va fi atribuit unul din oficiu, care este criptic și generat aleatoriu. Pentru o igienă corespunzătoare, cel mai bine este să denumești fiecare container.
 
 ```bash
 docker container run --publish 80:80 --detach --name kosson-starter-kick nginx
@@ -54,11 +54,23 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 c6e614f7c8ad        nginx               "nginx -g 'daemon of…"   9 seconds ago       Up 8 seconds        0.0.0.0:80->80/tcp   kosson-starter-kick
 ```
 
-Numirea containerelor este foarte importantă pentru că are urmări în ceea ce privește stabilirea unei rețele între mai multe posibile containere.
+Numirea containerelor este foarte importantă pentru că are urmări în ceea ce privește stabilirea unei rețele între mai multe posibile containere. Un alt aspect important este cel al numelui de host a containerului. Ai putea da același nume pe care l-ai desemnat containerului.
 
-## Rularea unui container
+```bash
+docker container run --publish 80:80 --detach --name unnginx -h unnginx nginx
+```
 
-Atunci când dorim rularea unui container, se va folosi comanda `docker container run`. Acestă comandă va căuta imaginea căreia devine gazdă și dacă nu găsește acea imagine într-un `cache` dedicat de pe mașina locală, va proceda la descărcarea acesteia de pe net (Docker Hub). De exemplu, pentru a rula un server web Nginx, tot ce este nevoie este să-l inițiezi și în spate vor fi descărcate toate resursele necesare.
+sau
+
+```bash
+docker run -it --name ubuntutest -h ubuntutest ubuntu:latest
+```
+
+Atribuirea unui nume rezolvă problema repornirii ceva mai târziu: `docker start -i ubuntutest`.
+
+## Rularea unui anumit container
+
+Atunci când dorim rularea unui container, se va folosi comanda `docker container run`. Comanda `docker run` este un alias pentru `docker container run`, care la rândul său este un alias petru `docker container create && docker container start`. Acestă comandă va căuta imaginea căreia devine gazdă și dacă nu găsește acea imagine într-un `cache` dedicat de pe mașina locală, va proceda la descărcarea acesteia de pe net (Docker Hub). De exemplu, pentru a rula un server web Nginx, tot ce este nevoie este să-l inițiezi și în spate vor fi descărcate toate resursele necesare.
 
 ```bash
 docker container run --publish 80:80 nginx
@@ -102,27 +114,33 @@ docker run -d busybox
 
 ### Rularea în mod interactiv
 
-Ceea ce se întâmplă atunci când rulezi un container este că o imagine este luată drept input și este lansată ca un container. Un container poate rula în modul interactiv dacă comenzii `run` îi sunt adăugate fanioanele `-t` și `-i`. Fanionul `-i` este cel care face rularea containerului în mod interactiv. Ceea ce se petrece în spate este o capturare a input-ului standard al acelui container (STDIN-ul). Fanionul `-t` alocă un pseudo-terminal (TTY) pe care îl atribuie containerului tocmai pornit.
+Ceea ce se întâmplă atunci când rulezi un container este că o imagine este luată drept input și este lansată ca un container. Un container poate rula în modul interactiv dacă comenzii `run` îi sunt adăugate opțiunile `-i` și `-t`. Opțiunea `-i` este cel care face rularea containerului în mod *interactiv*. Ceea ce se petrece în spate este o capturare a input-ului standard al acelui container (STDIN-ul). Fanionul `-t` alocă un pseudo-terminal (TTY) pe care îl atribuie containerului tocmai pornit.
 
 ```bash
-sudo docker run -i -t ubuntu:18.04 /bin/bash
+docker run -i -t ubuntu:18.04 /bin/bash
+```
+
+sau 
+
+```bash
+docker run -it ubuntu:latest /bin/bash
 ```
 
 Să analizăm comanda de mai sus. Dacă imaginea de Ubuntu nu există, va fi descărcată automat, fiind echivalentul unei comenzi `docker pull ubuntu`. Imediat ce a fost descărcată, se va crea automat containerul prin instanțierea sa. Acest pas este echivalentul comenzii CLI `docker container create`. Este adăugat un layer final read-write ceea ce permite operațiuni cu sistemul său local de fișiere. Următorul pas este să creeze o interfață de rețea pentru a conecta containerul la rețeaua default. Privind la comandă, nu a fost specificată nicio opțiune privind rețeaua. Acest pas implică și alocarea unei adrese IP containerului. Containerele se pot conecta la rețele externe folosind conectarea la rețeaua gazdei. În acest moment `docker` pornește containerele și execută comanda specificată `/bin/bash`. Dacă termini sesiunea de bash, containerul va fi oprit, dar nu va fi scos din lucru.
 
-Putem să închidem sesiunea interactivă fără a opri funcționarea containerului prin combinațiile succesive `CTRL + P` urmat de `CTRL + Q`. TTY-ul va fi deconectat de la container. Atenție, containerul va continua să funcționeze.
+Putem să închidem sesiunea interactivă fără a opri funcționarea containerului prin combinațiile succesive `CTRL + P` urmat de `CTRL + Q` ori pur și simplu cu `exit` în linia de comandă. TTY-ul va fi deconectat de la container. Atenție, containerul va continua să funcționeze.
 
 De exemplu:
 
 ```bash
-sudo docker run -i -t busybox
+sudo docker run -it busybox
 # urmat de o detașare CTRL + P plus CTRL + Q
 sudo docker ps
 #CONTAINER ID IMAGE      COMMAND  ... NAMES
 #028ea693bcc2 busybox   "sh"     peaceful_goldwasser
 ```
 
-La nevoie poți să reatașezi containerul de la care te-ai deconectat cu `sudo docker attach numeledinps`.
+La nevoie poți să reatașezi containerul de la care te-ai deconectat cu `sudo docker attach numecontainer`.
 
 ```bash
 sudo docker attach peaceful_goldwasser
@@ -134,7 +152,7 @@ sudo docker attach peaceful_goldwasser
 docker container run -it nume_container
 ```
 
-Opțiunea `-t` îți oferă un pseudo-TTY. Opțiunea `-i` permite menținerea deschisă a unei sesiuni.
+Opțiunea `-t` îți oferă un pseudo-TTY. Opțiunea `-i` permite menținerea deschisă a unei sesiuni interactive.
 
 ```bash
 docker container run -it --name webserv nginx bash
@@ -171,14 +189,14 @@ docker container ls
 
 cu un rezultat similar celui de mai jos:
 
-```text
+```log
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                NAMES
 ec44ed53308c        nginx               "nginx -g 'daemon of…"   2 minutes ago       Up 2 minutes        0.0.0.0:80->80/tcp   loving_allen
 ```
 
-Rularea aceleiași comenzi încheiată cu parametrul `-a` va indica un istoric al containerelor rulate. Ceea ce este interesant este că toate containerele au un nume generat automat dacă nu este pasat unul la pornire.
+Rularea aceleiași comenzi încheiată cu parametrul `-a` (`docker container ls -a`) va indica un istoric al containerelor rulate. Ceea ce este interesant este că toate containerele au un nume generat automat dacă nu este pasat unul la pornire.
 
-```text
+```log
 docker container ls -a
 CONTAINER ID   IMAGE                              COMMAND                  CREATED          STATUS                        PORTS     NAMES
 e25df76f0216   nginx                              "/docker-entrypoint.…"   28 minutes ago   Exited (127) 28 minutes ago             bold_murdock
