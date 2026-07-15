@@ -118,7 +118,7 @@ Este driverul care a fost utilizat implicit de versiunile 18.06 și cele anterio
 
 ### devicemapper
 
-Este drivelul care a fost utilizat de distribuțiile CentOS și RHEL ceva mai vechi. În acest moment și acestea au suport pentru `overlay2`.
+Este driverul care a fost utilizat de distribuțiile CentOS și RHEL ceva mai vechi. În acest moment și acestea au suport pentru `overlay2`.
 
 ### btrfs și zfs
 

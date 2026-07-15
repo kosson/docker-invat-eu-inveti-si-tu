@@ -1,10 +1,14 @@
 # Persistența datelor
 
+## Introducere
+
 Toate datele care sunt create într-un container, sunt stocate într-un layer care permite scrierea acestora. Adu-ți mereu aminte de faptul că un container, de regulă, nu poate fi modificat în ceea ce privește datele (*immutable*). Este o creație efemeră care odată oprit, pierde datele interne. Pe cale de consecință, atunci când containerul nu mai există, nici datele scrise în acesta, nu vor mai fi. Atunci când un container este oprit, datele din sistemul de fișiere generat intern, care este o abstractizare în sine, vor dispărea (comportamentul din oficiu grație OverlayFS).
 
-Din nefericire, datele din container nu pot fi mutate în alte locații ale sistemului de fișiere gazdă. Vorbim despre necesitatea de a beneficia de un mecanism care să asigure persistența datelor. Pentru că de cele mai multe ori vei avea nevoie de date persistente, cum ar fi loguri sau chiar datele unor baze de date în anumite cazuri, Docker oferă *volume* care au un ciclu de viață separat de cel al containerelor și *bind mounts*. În cazul în care Docker funcționează pe o mașină Linux, poți folosi și `tmpfs mount` care vor rula în memorie. Pentru a scrie datele în layer-ul writable, este nevoie ca sistemul de fișiere să fie gestionat de un driver specializat - driver storage.
+Din nefericire, datele din container nu pot fi mutate în alte locații ale sistemului de fișiere gazdă. Vorbim despre necesitatea de a beneficia de un mecanism care să asigure persistența datelor. Pentru că de cele mai multe ori vei avea nevoie de date persistente, cum ar fi log-uri sau chiar datele unor baze de date în anumite cazuri, Docker oferă *volume*, care au un ciclu de viață separat de cel al containerelor și a *bind mounts*-urilor. În cazul în care Docker funcționează pe o mașină Linux, poți folosi și `tmpfs mount` care vor rula în memorie. Pentru a scrie datele în layer-ul writable, este nevoie ca sistemul de fișiere să fie gestionat de un driver specializat - driver storage.
 
 Din punctul de vedere al unui container, datele sunt văzute, fie ca un director, fie ca un fișier mare în structura de fișiere proprie.
+
+Buna practică spune că poți folosi stocarea locală pentru a actualiza datele unui container live, nu ar trebui să faci acest lucru. Containerele ar trebui înțelese ca obiecte fixe, care să nu fie modificate din moment ce le pornești. Practica curentă nu respectă mereu acest sfat și pentru mulți dezvoltatori, volumele au devenit mecanismul prin care pot modifica starea și datele unui container live (useri, permisiuni și tot ce ține de configurare). Buna practică spune că orice modificare ar trebui să se reflecte în pornirea unui nou container, nu modificarea din mers a unuia existent.
 
 ## tmpfs
 
@@ -12,13 +16,39 @@ Această zonă de stocare a datelor se formează strict în memoria mașinii gaz
 
 ## Despre volume
 
-Un volum este un director asociat unui container în care se pot introduce date. Toate containerele pot folosi același volum dacă există un scenariu în care acest lucru este util. Volumele sunt păstrate chiar și în cazul în care containerul este șters. Motivul evident este de a păstra datele între repornirile containerelor. Volumele se creează în structura de directoare a locului unde este instalat Docker pe mașina gazdă. De exemplu, în Ubuntu, le vei găsi în `/var/lib/docker/volumes/`. Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Ca administrator trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
+Un volum este un director asociat unui container în care se pot introduce date. Volumele trebuie privite drept obiecte separate care nu depind de ciclul de viață a unui container.
+
+Toate containerele pot folosi același volum dacă există un scenariu în care acest lucru este util. Volumele sunt păstrate chiar și în cazul în care containerul este șters. Motivul evident este de a păstra datele între repornirile containerelor. Volumele se creează în structura de directoare a locului unde este instalat Docker pe mașina gazdă. De exemplu, în Ubuntu, le vei găsi în `/var/lib/docker/volumes/`. Trebuie să fii root pentru a le „vizita”.
+
+```bash
+root@rog14g:/var/lib/docker/volumes# ls -lah
+total 208K
+drwx-----x  7 root root    32K Jul 14 12:18 .
+drwx--x--- 12 root root   4.0K Jul 14 10:26 ..
+drwx-----x  3 root root   4.0K Jul 14 12:18 44e3d4e7eaae6b08a544978c01aa1963ceb95516780df9d36cafff63a2e12110
+brw-------  1 root root 259, 5 Jul 14 10:26 backingFsBlockDev
+drwx-----x  3 root root   4.0K Jul 14 12:16 e951d6aac8d47a1d124bf7ce3836dec2fec221f7f36a9807c34ffdfc815ae141
+drwx-----x  3 root root   4.0K Jun 24 10:33 koha-docker_koha-db-data
+drwx-----x  3 root root   4.0K Jul  8 11:23 koha-docker_koha-rabbitmq-data
+-rw-------  1 root root   256K Jul 14 12:18 metadata.db
+drwx-----x  3 root root   4.0K Jun 24 10:33 traefik_traefik_certs
+```
+
+Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Ca administrator trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
 
 Pentru a vedea cum sunt gestionate volumele în imaginile oficiale, am ales [MariaDB latest](https://hub.docker.com/_/mariadb/tags) din Docker Hub. Unul din layere este dedicat: `VOLUME [/var/lib/mysql]`. În cazul în care vei rula acest container sau oricare altul care creează un volum, poți inspecta ce volume au fost create prin `docker volume ls`. De altfel, volumele apar și în momentul în care investighezi cum a fost configurat containerul folosind `docker container inspect`. În JSON-ul returnat vei vedea chiar unde este mapat (care este corespondența) volumul pe hard disk-ul mașinii gazdă. Dacă ai aflat care este hash-ul unui volum prin rularea lui `docker volume ls`, poți inspecta acel volum direct `docker volume inspect <hash>`. Reține faptul că volumele persistă după oprirea containerelor. Încă un lucru important este acela că în sistemele NIX (Linux/GNU și MacOS), de fapt containerele rulează într-o mașină virtuală rudimentară, ceea ce nu permite accesul direct la conținutul volumelor.
 
-Pentru crearea unui volum există o comandă specifică: `docker volume create`. Cel mai adesea volumele vor fi create atunci când sunt lansate containerele sau atunci când sunt create serviciile.
+Pentru crearea unui volum există o comandă specifică: `docker volume create`. Cel mai adesea volumele vor fi create atunci când sunt lansate containerele sau atunci când sunt create serviciile. Concluzia este că volumele create deja vor fi folosite, iar cele care au fost declarate, dar nu există, vor fi create la momentul rulării containerului.
 
-Crearea unui volum atrage după sine crearea unui director pe mașina gazdă. Pentru a avea acces la ele, aceste volume sunt montate (se fac legăturile necesare) din containere la momentul rulării acestora. Un anumit volum poate fi montat de mai multe containere. În momentul în care containerele și-au încheiat activitatea, directorul nu se va șterge. Volumele care nu mai sunt folosite, pot fi șterse folosind comanda `docker volume prune`.
+Crearea unui volum atrage după sine crearea unui director pe mașina gazdă. Pentru a avea acces la ele, aceste volume sunt montate (se fac legăturile necesare) din containere la momentul rulării acestora. Un anumit volum poate fi montat de mai multe containere. În momentul în care containerele și-au încheiat activitatea, directorul nu se va șterge. Volumele care nu mai sunt folosite, pot fi șterse folosind comanda `docker volume prune`. Pentru a vedea care sunt volumele disponibile, vei folosi comanda `docker volume ls`.
+
+Dacă tot ai creat un volum, ai putea să-l și montezi într-un container la momentul creării acestuia:
+
+```bash
+docker run -it --name testbox --mount source=nume_volum_nou,target=/data alpine
+```
+
+Pentru a vedea câteva detalii privind volumul creat sau unul existent, poți folosi `docker volume inspect nume_volum_nou`. Vei obține niște date specifice în format JSON.
 
 Aceste volume pot fi specificate în fișierele `Dockerfile` prin instrucțiunea `VOLUME` sau la momentul rulării imaginii, se poate specifica folosind opțiunea `-v`.
 
@@ -36,9 +66,9 @@ Astfel, vei crea un director nou montat în container. Driverele pentru volume p
 docker rm -v 03fr44343
 ```
 
-Volumele nu măresc dimensiunea containerelor care le folosesc pentru că  nu sunt legate organic de containere.
+Volumele nu măresc dimensiunea containerelor pe care le folosesc pentru că nu sunt legate organic de containere.
 
-Volumele pot avea un nume sau pot fi anonime, numele lor fiind un hash dat automat de docker. Cele anonime sunt montate primele de container și li se dă un nume aleatoriu. Nu există nicio diferență de comportament între cele două. Volumele mai permit stocarea datelor pe mașini la distanță sau în cloud. Volumele sunt șterse numai când acest lucru este dorit înadins.
+Volumele pot avea un nume sau pot fi anonime, numele lor fiind un hash dat automat de Docker. Cele anonime sunt montate primele de container și li se dă un nume aleatoriu. Nu există nicio diferență de comportament între cele două. Volumele mai permit stocarea datelor pe mașini la distanță sau în cloud. Volumele sunt șterse numai când acest lucru este dorit înadins.
 
 Atunci când este nevoie să muți datele de pe o mașină gazdă pe alta, directorul în care se află volumele va fi cel care trebuie mutat. În cazul Ubuntu, îl vei muta pe `/var/lib/docker/volumes`.
 
@@ -93,23 +123,6 @@ docker run -v /var/lib/mysql/data
 
 ```bash
 docker container run -d --name mariadb -e MYSQL_ALLOW_EMPTY_PASSWORD=True -v mariadb_vol1:/var/lib/mysql mariadb
-Unable to find image 'mariadb:latest' locally
-latest: Pulling from library/mariadb
-cf92e523b49e: Pull complete 
-11a7b642a1b0: Pull complete 
-d05db1f7ddc9: Pull complete 
-043662c3afa1: Pull complete 
-de48eea20795: Pull complete 
-1a40b9e7476d: Pull complete 
-d053ff7fa7cc: Pull complete 
-f4459f17c9a8: Pull complete 
-05ae67b7d96a: Pull complete 
-9bd55ebdb8b3: Pull complete 
-baf1cda74ce3: Pull complete 
-Digest: sha256:59ef1139afa1ec26f98e316a8dbef657daf9f64f84e9378b190d1d7557ad2feb
-Status: Downloaded newer image for mariadb:latest
-4e58571c0d09a4b701fcea4a5e74fe3fda52d8f5be24b25280b86185fb3397d6
-
 docker container ls
 CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS         PORTS      NAMES
 4e58571c0d09   mariadb   "docker-entrypoint.s…"   9 seconds ago   Up 6 seconds   3306/tcp   mariadb
@@ -218,6 +231,15 @@ docker rm -v nume_container_sau_id
 ```bash
 docker run -p 8080:3000 -v $(pwd):/var/www -w "/var/www" node npm start
 ```
+
+## Ștergerea volumelor
+
+Pentru a șterge volume ai la dispoziție două comenzi: 
+
+- `docker volume rm` prin care ștergi volumele pe care le menționezi precis și
+- `docker volume prune`.
+
+Folosind `docker volume prune --all` vei putea șterge toate volumele care nu sunt montate într-un container sau într-o replică.
 
 ## Bind mounts
 
