@@ -1,10 +1,10 @@
 # Docker compose
 
-Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Docker compose nu a fost creat pentru a fi folosit în producție, ci doar pentru development. Pentru a compune serviciile este folosit un fișier YAML în care sunt precizate toate și modul cum se configurează.
+Docker Compose este un instrument pentru definirea și rularea unei aplicații care folosește mai multe containere. Docker Compose nu a fost creat pentru a fi folosit în producție, ci doar pentru development. Pentru a compune serviciile este folosit un fișier YAML în care sunt precizate toate serviciile și configurările fiecăruia dintre acestea.
 
 ## Fișierul `docker-compose.yml`
 
-Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul *YAML Ain't Markup Language*, fiind o structură de jalonare a fragmentelor de text (markup) cu rol de chei și valori (serializare a datelor) bazată pe spațiere și pe linii. Ținta este ușoara înțelegere de către oameni, dar și mașini a datelor. Mai multe detalii privind acest tip de fișiere la yaml.org.
+Fișierele `docker-compose.yml` folosesc un format de fișier care se numește YAML. Acronimul vine de la recursivul *YAML Ain't Markup Language*, fiind o structură de jalonare a fragmentelor de text (*markup*) cu rol de chei și valori (serializare a datelor) bazată pe spațiere și pe linii. Ținta este ușoara înțelegere a datelor de către oameni, dar și mașini. Mai multe detalii privind acest tip de fișiere la yaml.org.
 
 Acest fișier este folosit pentru configurarea serviciilor. De fapt ceea ce poți realiza este o orchestrare a mai multor containere Docker și pentru a crea legături între acestea. Acest fișier este prelucrat printr-un proces de `build`, din care va rezulta o imagine.
 
@@ -60,7 +60,7 @@ Versiunea de lucru care trebuie specificată pentru fișierul `docker-compose.ym
 
 Mai nou, pentru versiunile mai noi ale lui `docker` (peste 20) nici nu mai este nevoie să specifici versiunea de fișier.
 
-În acest moment, Docker are versiunea 20+ ceea ce înseamnă că fișierele `docker-compose.yml` nu mai trebuie să menționeze versiunea.
+În acest moment, Docker Compose este la versiunea 20+, ceea ce înseamnă că fișierele `docker-compose.yml` nu mai trebuie să menționeze versiunea.
 
 ### Gestionarea volumelor
 
@@ -205,7 +205,7 @@ Această comandă oprește containerele, nu le șterge.
 Încarcă imaginile în registry.
 
 ### Comanda `docker compose exec`
-
+a datelor
 Este o comandă pentru a executa o comandă într-un container.
 
 ### Comanda `docker compose rm`
@@ -214,7 +214,7 @@ Este o comandă pentru a executa o comandă într-un container.
 
 ```yaml
 services:
-  api:
+  api:a datelor
     build: .
     image: node:10.15.3-alpine
     container_name: nodejs

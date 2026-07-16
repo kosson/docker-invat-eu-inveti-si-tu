@@ -2,9 +2,12 @@
 
 ## Introducere
 
-Toate datele care sunt create într-un container, sunt stocate într-un layer care permite scrierea acestora. Adu-ți mereu aminte de faptul că un container, de regulă, nu poate fi modificat în ceea ce privește datele (*immutable*). Este o creație efemeră care odată oprit, pierde datele interne. Pe cale de consecință, atunci când containerul nu mai există, nici datele scrise în acesta, nu vor mai fi. Atunci când un container este oprit, datele din sistemul de fișiere generat intern, care este o abstractizare în sine, vor dispărea (comportamentul din oficiu grație OverlayFS).
+Toate datele care sunt create într-un container, sunt stocate într-un layer care permite scrierea acestora. Adu-ți mereu aminte de faptul că un container, de regulă, nu poate fi modificat în ceea ce privește datele (este *immutable*). Este o creație efemeră care odată oprită, pierde datele interne. Pe cale de consecință, atunci când containerul nu mai există, nici datele scrise în acesta, nu vor mai fi. Atunci când un container este oprit, datele din sistemul de fișiere generat intern, care este o abstractizare în sine, vor dispărea (comportamentul din oficiu grație OverlayFS).
 
-Din nefericire, datele din container nu pot fi mutate în alte locații ale sistemului de fișiere gazdă. Vorbim despre necesitatea de a beneficia de un mecanism care să asigure persistența datelor. Pentru că de cele mai multe ori vei avea nevoie de date persistente, cum ar fi log-uri sau chiar datele unor baze de date în anumite cazuri, Docker oferă *volume*, care au un ciclu de viață separat de cel al containerelor și a *bind mounts*-urilor. În cazul în care Docker funcționează pe o mașină Linux, poți folosi și `tmpfs mount` care vor rula în memorie. Pentru a scrie datele în layer-ul writable, este nevoie ca sistemul de fișiere să fie gestionat de un driver specializat - driver storage.
+Din nefericire, datele din container nu pot fi mutate în alte locații ale sistemului de fișiere gazdă. Totuși, avem nevoie de un mecanism care să asigure persistența datelor cum ar fi log-uri sau chiar datele unor baze de date în anumite cazuri. Docker oferă ceea ce vom numi *volume*.
+Volumele au un ciclu de viață separat de cel al containerelor și a *bind mounts*-urilor. Reține faptul că în momentul opririi unui container, datele din volum împreună cu însuși volumul se vor păstra. Câteva detalii rapide despre un volum poți obține rulând comanda `docker inspect -f '{{.Mounts}}' numele_volumului`.
+
+În cazul în care Docker funcționează pe o mașină Linux, poți folosi și `tmpfs mount` care va oferi o depozitare în memorie. Pentru a scrie datele în layer-ul *writable*, este nevoie ca sistemul de fișiere să fie gestionat de un driver specializat - driver storage.
 
 Din punctul de vedere al unui container, datele sunt văzute, fie ca un director, fie ca un fișier mare în structura de fișiere proprie.
 
@@ -34,11 +37,11 @@ drwx-----x  3 root root   4.0K Jul  8 11:23 koha-docker_koha-rabbitmq-data
 drwx-----x  3 root root   4.0K Jun 24 10:33 traefik_traefik_certs
 ```
 
-Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Ca administrator trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
+Volumele sunt cea mai bună opțiune pentru a realiza un mecanism de persistență a datelor. Trebuie să te asiguri de faptul că niciun proces în afară de Docker nu va modifica această zonă a sistemului de operare.
 
-Pentru a vedea cum sunt gestionate volumele în imaginile oficiale, am ales [MariaDB latest](https://hub.docker.com/_/mariadb/tags) din Docker Hub. Unul din layere este dedicat: `VOLUME [/var/lib/mysql]`. În cazul în care vei rula acest container sau oricare altul care creează un volum, poți inspecta ce volume au fost create prin `docker volume ls`. De altfel, volumele apar și în momentul în care investighezi cum a fost configurat containerul folosind `docker container inspect`. În JSON-ul returnat vei vedea chiar unde este mapat (care este corespondența) volumul pe hard disk-ul mașinii gazdă. Dacă ai aflat care este hash-ul unui volum prin rularea lui `docker volume ls`, poți inspecta acel volum direct `docker volume inspect <hash>`. Reține faptul că volumele persistă după oprirea containerelor. Încă un lucru important este acela că în sistemele NIX (Linux/GNU și MacOS), de fapt containerele rulează într-o mașină virtuală rudimentară, ceea ce nu permite accesul direct la conținutul volumelor.
+Pentru a vedea cum sunt gestionate volumele în imaginile oficiale, am ales [MariaDB latest](https://hub.docker.com/_/mariadb/tags) din Docker Hub. Unul din layere este dedicat: `VOLUME [/var/lib/mysql]`. În cazul în care vei rula acest container sau oricare altul care creează un volum, poți inspecta ce volume au fost create prin `docker volume ls`. De altfel, volumele apar și în momentul în care investighezi cum a fost configurat containerul folosind `docker container inspect nume_container`. În JSON-ul returnat vei vedea chiar unde este mapat (care este corespondența) volumul pe hard disk-ul mașinii gazdă. Dacă ai aflat care este hash-ul unui volum prin rularea lui `docker volume ls`, poți inspecta acel volum direct `docker volume inspect <hash sau nume_volum_ales>`. Reține faptul că volumele persistă după oprirea containerelor. Încă un lucru important este acela că în sistemele NIX (Linux/GNU și MacOS), de fapt containerele rulează într-o mașină virtuală rudimentară, ceea ce nu permite accesul direct la conținutul volumelor.
 
-Pentru crearea unui volum există o comandă specifică: `docker volume create`. Cel mai adesea volumele vor fi create atunci când sunt lansate containerele sau atunci când sunt create serviciile. Concluzia este că volumele create deja vor fi folosite, iar cele care au fost declarate, dar nu există, vor fi create la momentul rulării containerului.
+Pentru crearea unui volum există o comandă specifică: `docker volume create nume_volum`. În practică, volumele vor fi create atunci când sunt lansate containerele sau atunci când sunt create serviciile. Concluzia este că volumele create deja vor fi folosite, iar cele care au fost declarate, dar nu există, vor fi create la momentul inițierii rulării containerului.
 
 Crearea unui volum atrage după sine crearea unui director pe mașina gazdă. Pentru a avea acces la ele, aceste volume sunt montate (se fac legăturile necesare) din containere la momentul rulării acestora. Un anumit volum poate fi montat de mai multe containere. În momentul în care containerele și-au încheiat activitatea, directorul nu se va șterge. Volumele care nu mai sunt folosite, pot fi șterse folosind comanda `docker volume prune`. Pentru a vedea care sunt volumele disponibile, vei folosi comanda `docker volume ls`.
 
@@ -50,7 +53,7 @@ docker run -it --name testbox --mount source=nume_volum_nou,target=/data alpine
 
 Pentru a vedea câteva detalii privind volumul creat sau unul existent, poți folosi `docker volume inspect nume_volum_nou`. Vei obține niște date specifice în format JSON.
 
-Aceste volume pot fi specificate în fișierele `Dockerfile` prin instrucțiunea `VOLUME` sau la momentul rulării imaginii, se poate specifica folosind opțiunea `-v`.
+Aceste volume pot fi specificate în fișierele `Dockerfile` prin instrucțiunea `VOLUME` sau la momentul rulării imaginii, se poate specifica folosind opțiunea `-v nume_volum:/director/intern/container`.
 
 ```bash
 docker run -v /date -it busybox
@@ -111,7 +114,7 @@ Căile trebuie să fie mereu relative la directorul din care se rulează constru
 
 ## Volume anonime
 
-Docker permite realizarea unei legături directe a unui subdirector al containerului cu un volum care se creează automat în `var/lib/docker/volumes`. Numele volumului va fi un hash creat automat.
+Docker permite realizarea unei legături directe a unui subdirector al containerului cu un volum care se creează automat în `var/lib/docker/volumes`. Numele volumului va fi un hash de 64 de biți creat automat.
 
 ```bash
 docker run -v /var/lib/mysql/data
@@ -156,7 +159,7 @@ volumes:
 
 O astfel de definire funcționează pe sistemele Linux fără a întâmpina nicio problemă. Totuși, folosirea unui asfel de *bind-mount* și inițierea infrastructurii pe un sistem Windows sau MacOS, nu va funcționa. Portabilitatea nu se va putea realiza. Marca sintactică a unui *bind-mount* este slash-ul.
 
-În cazul [MacOS](https://docs.docker.com/docker-for-mac/osxfs-caching/), fanionul pentru delegarea scrierilor este poziționat cu scopul de a-i spune lui Docker că poate scrie fișiere în container. În sistemul de fișiere virtualizat al containerului datele sunt gestionate cu o rapiditate mai mare decât ce se petrece pe mașina gazdă. Gândește-te la operațiuni consumatoare de astfel de resurse cum ar fi instalările pachetelor cu npm sau dacă faci o transformare de fișiere.
+În cazul [MacOS](https://docs.docker.com/docker-for-mac/osxfs-caching/), opțiunea pentru delegarea scrierilor este poziționat cu scopul de a-i spune lui Docker că poate scrie fișiere în container. În sistemul de fișiere virtualizat al containerului datele sunt gestionate cu o rapiditate mai mare decât ce se petrece pe mașina gazdă. Gândește-te la operațiuni consumatoare de astfel de resurse cum ar fi instalările pachetelor cu npm sau dacă faci o transformare de fișiere.
 
 ```yaml
 volumes:
@@ -177,8 +180,6 @@ volumes:
   db:
 ```
 
-Nu uita faptul că montarea de căi către baze de date generează probleme la un moment dat. Ar fi bine să fie evitată o astfel de practică.
-
 În cazul [Windows](https://www.reddit.com/r/docker/comments/8hp6v7/setting_up_docker_for_windows_and_wsl_to_work/), pentru a ține în sincronizare fișierele de pe mașină cu cele din container, ai nevoie de instrumente suplimentare cum ar fi [docker-bg-sync](https://github.com/cweagans/docker-bg-sync), care să țină această sincronizare. Se poate folosi și WSL.
 
 Nu crea un volum numit `local`. Acesta este creat din oficiu.
@@ -194,10 +195,10 @@ volumes:
 Pentru crearea explicită a volumelor înaintea pornirii unui container vei folosi sub-comanda `volume create`. Crearea volumelor în acest mod permite specificarea driverelor în cazul în care acest lucru este necesar.
 
 ```bash
-docker volume create redis_date
+docker volume create nume_volum_nou
 ```
 
-Atașarea volumului nou creat se face la momentul `run`.
+Atașarea volumului nou creat se poate face la momentul `run`. Să presupunem că `nume_volum_nou` este chiar un volum de lucru numit `redis_date`. Pentru acesta, vom avea mai jos exemplul:
 
 ```bash
 docker container run -d --name redis -v redis_date:/data --network reteaua_containerelor redis:alpine
@@ -234,31 +235,102 @@ docker run -p 8080:3000 -v $(pwd):/var/www -w "/var/www" node npm start
 
 ## Ștergerea volumelor
 
-Pentru a șterge volume ai la dispoziție două comenzi: 
+Pentru a șterge volume ai la dispoziție două comenzi:
 
 - `docker volume rm` prin care ștergi volumele pe care le menționezi precis și
-- `docker volume prune`.
+- `docker volume prune` va șterge toate volumele care nu sunt asociate vreunui container.
 
 Folosind `docker volume prune --all` vei putea șterge toate volumele care nu sunt montate într-un container sau într-o replică.
 
+Uneori, după multă muncă cu Docker, multe proiecte, încercări, etc. este posibil să ai volume care *atârnă* (în en. *dangling*) nemaifiind conectate la vreun container. Pentru a le detecta în vederea ștergerii poți rula comanda `docker volume ls -q -f dangling=true`. Ai putea obține chiar și dimensiunea pe care acestea o ocupă pe mediul de stocare rulând comanda `sudo du -h --max 0 /var/lib/docker/volumes/$(docker volume ls -q -f dangling=true)`. Dacă te afli în această situație rularea `docker volume prune` va rezolva această problemă.
+
+Vrei să obții o situație a resurselor ocupate de Docker în general? Rulează `docker system df`.
+Vei obține ceva similar cu:
+
+```log
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          69        8         50.59GB   8.487GB (16%)
+Containers      18        2         985MB     985MB (99%)
+Local Volumes   4         4         461.1MB   0B (0%)
+Build Cache     649       0         68.99GB   44.1GB
+```
+
+Dacă pasezi și opțiunea `-v`, vei avea un rezultat afișat care conține toate detaliile (cine, ce, cât). Un rezultat similar cu:
+
+```log
+Images space usage:
+
+REPOSITORY                                TAG                   IMAGE ID       CREATED         SIZE      SHARED SIZE   UNIQUE SIZE   CONTAINERS
+mariadb                                   latest                73d2c069f75f   2 weeks ago     341MB     0B            341.2MB       1
+alpine                                    latest                d529dd0c6e55   4 weeks ago     8.42MB    0B            8.416MB       0
+kosson/koha-ubuntu                        26.05.00              1fd585844b54   5 weeks ago     4.48GB    4.483GB       139.9kB       1
+<none>                                    <none>                fe3616f69bfc   5 weeks ago     4.48GB    4.483GB       140kB         0
+<none>                                    <none>                38b89826405a   6 weeks ago     4.48GB    4.483GB       139.4kB       0
+<none>                                    <none>                524c720c85d5   6 weeks ago     4.48GB    4.483GB       137.5kB       0
+
+Containers space usage:
+
+CONTAINER ID   IMAGE                       COMMAND                  LOCAL VOLUMES   SIZE      CREATED        STATUS                      NAMES
+f05ba9367d09   mariadb                     "docker-entrypoint.s…"   1               0B        46 hours ago   Exited (0) 45 hours ago     mariadb
+19f608106e16   ubuntu:latest               "/bin/bash"              0               48B       47 hours ago   Exited (130) 47 hours ago   ubuntutest
+672f47816985   kosson/koha-ubuntu:latest   "/bin/bash /kohadevb…"   0               983MB     5 days ago     Exited (137) Rheinwerk Publishing, Boston, MA. 5 days ago     koha-docker-koha-1
+
+Local Volumes space usage:
+
+VOLUME NAME                                                        LINKS     SIZE
+koha-docker_koha-rabbitmq-data                                     1         282.2kB
+traefik_traefik_certs                                              1         0B
+e951d6aac8d47a1d124bf7ce3836dec2fec221f7f36a9807c34ffdfc815ae141   1         156MB
+koha-docker_koha-db-data                                           1         304.8MB
+
+
+Build cache usage: 68.99GB
+
+CACHE ID       CACHE TYPE     SIZE      CREATED         LAST USED       USAGE     SHARED
+9bkcagjnbu4z   regular        0B        2 years ago     2 years ago     1         false
+7ytl1zkjeuoi   regular        0B        2 years ago     2 years ago     1         false
+oy56sh45n2rm   regular        0B        2 years ago     2 years ago     1         false
+r0kqy9qmxkm3   regular        0B        2 years ago     2 years ago     1         false
+mv32lo1zq8vn   regular        0B        2 years ago     2 years ago     1         false
+```
+
+Vrei să eliberezi spațiul? Nimic mai simplu: `docker system prune`. Comanda șterge toate containerele care nu sunt folosite și toate imaginile care nu sunt cerute de alte imagini. Așa-numitele *dangling images*.
+Dacă folosești opțiunea `-a` sau `--all`, vei șterge și imaginile care nu sunt folosite de containere. Mai adaugi `--volumes` și vei șterge și toate volumele care nu mai sunt asociate vreunui container. Comanda va mai șterge și toate rețelele pe care niciun container nu le mai folosește și chiar tot *build cache*-urile, adică zona folosită pentru construirea imaginilor (layerele depozitate acolo pe măsură ce imaginile erau create).
+
+Fii cu băgare de seamă la acest pas. Multe din resursele pe care le ai au nevoie doar de inițierea unui containere pentru a fi refolosite. Dacă ești în pană de spațiu pe mediul de stocare, trebuie să iei decizii radicale.
+
+Mai poți face curățenie și în imaginile contruite folosind registry-ul: `docker rm $(docker ps -a -q -f ancestor=nume_cont/nume_imagine)`. Poți șterge și imaginile care *atârnă*: `docker rmi $(docker images accountname/imagename -f dangling=true -q)`.
+
+Toate aceste soluții foarte elegante care privesc managementul resurselor prezentate mai sus puțin, au fost parafrazate din lucrarea lui Bernd Öggl și Michael Kofler, *Docker: Practical Guide for Developers and DevOps Teams*.
+
 ## Bind mounts
 
-Aceste puncte de stocare a datelor se pot seta oriunde pe sistemul de operare gazdă. Au funcționalități reduse.
-Folosirea unui *bind mount* va monta un director sau un fișier specificat în containerul ales. Pe scurt, folosești locația unui fișier sau a unui director de pe mașina gazdă în container chiar dacă acesta se află pe mașina gazdă.
-
-*Bind mount*-urie permit modificarea sistemului de fișiere al mașinii gazdă chiar din container și vice-versa. În cazul în care faci dezvoltare software și ai nevoie să observi în timp real modificările, un astfel de volum este cel pe care îl vei folosi.
+Aceste puncte de stocare a datelor se pot seta oriunde pe sistemul de operare gazdă. Au funcționalități reduse. Detaliile importante sunt disponibile la https://docs.docker.com/engine/storage/bind-mounts/.
+Folosirea unui *bind mount* va monta un director sau un fișier de pe mașina gazdă în container pe o cale internă acestuia. *Bind mount*-urile permit modificarea sistemului de fișiere al mașinii gazdă chiar din container și vice-versa. În cazul în care faci dezvoltare software și ai nevoie să observi în timp real modificările, un astfel de volum este cel pe care îl vei folosi.
+Pentru *bind mount*-uri, vei folosi doar căi care încep cu slash (`/nume/subfolder`). Istoric privind, nu sunt acceptate căi relative, precum `./nume`, dar mai nou pot fi utilizate în Docker Compose (vezi https://github.com/docker/cli/issues/1203?timeline_page=1).
 
 ```bash
 ## Sincronizeaza directoarele de lucru folosind un volum bind mount
 ## docker run -v pathonlocal:pathoncontainer -p 8080:8080 -d name nume_container nume_imagine
 docker run -v /home/nicolaie/Desktop/DEVELOPMENT/redcolectorcolab/redcolector:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
-# sau poți folosi variabile de sistem. Ptr. Linux:
-docker run -v $(pwd):/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+# sau poți folosi variabile de sistem. De exemplu, pentru sistemele Linux:
+docker run -v "$(pwd):/var/www/redcolector" -p 8080:8080 -d name nume_container nume_imagine
+# sau
+docker run -v "$(pwd)/data:/app/data" nginx
 ## Windows command
 docker run -v %cd%:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
 ## Windows PowerShell
-docker run -v ${pwd}:/var/www/redcolector -p 8080:8080 -d name nume_container nume_imagine
+docker run -v "${pwd}:/var/www/redcolector" -p 8080:8080 -d name nume_container nume_imagine
 ```
+
+Documentația indică două moduri în care poți face un *bind mount*:
+
+```bash
+docker run --mount type=bind,src=<host-path>,dst=<container-path>
+docker run --volume <host-path>:<container-path>
+```
+
+Onservă faptul că se poate utiliza și `--mount`. Documentația indică faptul că ar fi o preferință pentru `--mount`. Și un aspect important privind utilizarea lui `--volume`. În cazul în care subdirectorul nu există pe mașina gazdă, acesta va fi creat la momentul inițierii containerului. Acest aspect are implicații structurale privind organizarea proiectelor proprii cân faci dezvoltare sau testare de software.
 
 Fii foarte atent, pentru că în cazul în care ai o aplicație Node.js și de pe mașina gazdă ai șters directorul `node_modules`, acest lucru va fi reflectat fidel și in directorul de lucru al containerului chiar dacă la momentul constituirii imaginii ai instalat `node_modules` pentru a fi disponibile viitoarei aplicații copiate în directorul de lucru. Pentru a rezolva acest aspect, vom crea un volum.
 
@@ -279,6 +351,8 @@ docker run -v $(pwd):/var/www/redcolector:ro -v /var/www/redcolector/node_module
 ```
 
 Astfel de tip de volum poate fi folosit pentru a face schimb de fișiere de configurare între gazdă și containere. Acesta este și mecanismul prin care Docker rezolvă rezoluția DNS prin montarea fișierului `/etc/resolv.conf` în fiecare container.
+
+Documentația oficială ne mai spune că în cazul *bind mount*-ului mai avem un aspect care trebuie cântărit atent. Când faci un *bind mount* al unui fișier sau al unui director, să spunem `/mnt` al mașinii gazdă în container pe aceeași cale, Docker va ascunde datele existente în container pe acea cale pentru a nu fi suprascrise.
 
 ## Probleme legate de permisiuni
 
@@ -314,6 +388,13 @@ RUN set -x \
 
 Recomandabil este setarea de numere pentru USER în loc de nume.
 
+## Cazul sistemelor de operare folosite în containere având Security-Enhanced Linux
+
+În cazul Fedora, RHEL și alte sisteme de operare care implementează Security-Enhanced Linux (SELinux), nu acceptă volume care nu stau în subdirectorul desemnat volumelor Docker: `/var/lib/docker/volumes`. Soluția care există pentru a ocoli această limitare este să pui `z` sau `Z` ca opțiune pentru subdirectorul din container, precum în `-v /home/nume_user/varlibmysql/:/var/lib/mysql:z`. Acest indicator va atribui contextul SELinux fișierelor și subdirectoarelor montate în container. Mai mult, dacă folosești Podman, acest lucru este necesar. Câteva detalii sunt la următorul link: https://stackoverflow.com/questions/44139279/docker-mounting-volume-with-permission-denied.
+
 ## Resurse
 
 - [Volumes](https://docs.docker.com/storage/volumes/)
+- [Define and manage volumes in Docker Compose](https://docs.docker.com/reference/compose-file/volumes/)
+- [volumes pentru serviciile unui compose file](https://docs.docker.com/reference/compose-file/services/#volumes)
+- Bernd Öggl și Michael Kofler, *Docker: Practical Guide for Developers and DevOps Teams*. Rheinwerk Publishing, Inc., Boston (MA). 2023

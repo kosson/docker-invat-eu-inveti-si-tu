@@ -1,17 +1,17 @@
 # Swarm clusters
 
-Un cluster este o aplicație care rulează pe mai multe mașini. Aplicațiile care rulează folosind mai multe containere care folosesc mai multe mașini constituie ceea ce se numește `swarm` - roi. Docker poate rula individual pe o mașină, dar și folosind puterea de calcul a mai multor mașini dacă este trecută în modul **swarm**. Din oficiu, docker nu va inițializa vreun swarm. Poți interoga cu `docker info` și vei observa `Swarm: inactive`.
+Un cluster este o aplicație care rulează pe mai multe mașini. Aplicațiile care rulează folosind mai multe containere care folosesc mai multe mașini constituie ceea ce se numește `swarm` - *roi*. Docker poate rula individual pe o mașină, dar și prin cumularea puterii de calcul a mai multor mașini dacă este trecută în modul **swarm**. Din oficiu, Docker nu va inițializa vreun swarm. Poți interoga cu `docker info` și vei observa `Swarm: inactive`.
 
 Un **swarm** este un grup de mașini care rulează Docker unite în ceea ce se numește **cluster**. Din moment ce clusterul s-a constituit, poți rula aceleași comenzi obișnuite folosind un **swarm manager**. Mașinile din **swarm** pot fi fizice sau virtuale. Când o mașină se adaugă unui **swarm**, aceasta devine un nod. Mașinile dintr-un **swarm** sunt noduri.
 
-Managerii de swarm sunt singurele mașini care pot executa comenzi sau pot permite altor mașini să se alăture swarm-ului ca **workeri**. Un worker poate fi promovat la rang de manager. Un manager poate fi la rândul său un worker. Din moment ce pornești docker-ul în modul **swarm** transformă mașina de pe care s-a inițiat comanda în manager de swarm.
+Managerii de swarm sunt singurele mașini care pot executa comenzi sau pot permite altor mașini să se alăture swarm-ului ca **workeri**. Un worker poate fi promovat la rang de manager. Un manager poate fi la rândul său un worker. Din moment ce pornești Docker-ul în modul **swarm** transformă mașina de pe care s-a inițiat comanda în manager de swarm.
 
 ## Inițierea swarm-ului
 
 Pentru a iniția swarm-ul emiți comanda `docker swarm init`. Aceasta va transforma mașina curentă în manager de swarm.
 Pentru a adăuga alte mașini ca workeri, de pe acestea se va lansa comanda `docker swarm join`.
 
-```text
+```log
 docker swarm init
 Error response from daemon: could not choose an IP address to advertise since this system has multiple addresses on interface wlp3s0 (2a02:2f00:e101:7b33:46ee:e75:4088:fd5b and 2a02:245f:e101:7b00:8100:5bff:8a3a:2c8) - specify one with --advertise-addr
 
@@ -42,7 +42,7 @@ docker-machine create --driver virtualbox virtuala1
 
 Operațiunile prin care trece ca efect al comenzii.
 
-```text
+```log
 Running pre-create checks...
 (virtuala1) Default Boot2Docker ISO is out-of-date, downloading the latest release...
 (virtuala1) Latest release for github.com/boot2docker/boot2docker is v18.09.1
